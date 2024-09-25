@@ -23,15 +23,20 @@ const game = {
       this.enemyController = new EnemyController(this);
       this.projectileController = new ProjectileController(this);
       this.scoreboard = new Scoreboard(this);
-      this.menu = new Menu(this);
+      this.menuManager = new MenuManager(this);
+      this.collisionManager = new CollisionManager(this);
+      this.highScoreManager = new HighScoreManager();
 
       // Set up event listeners
       window.addEventListener("keydown", this.handleKeyDown.bind(this));
       window.addEventListener("keyup", this.handleKeyUp.bind(this));
       window.addEventListener("resize", this.handleResize.bind(this));
+      this.canvas.addEventListener("click", this.handleClick.bind(this));
+
+      // Show main menu
+      this.menuManager.showMenu("main");
 
       // Start the game loop
-      this.isRunning = true;
       this.lastTime = performance.now();
       requestAnimationFrame(this.gameLoop.bind(this));
     } catch (error) {
@@ -40,24 +45,23 @@ const game = {
   },
 
   gameLoop(currentTime) {
-    if (!this.isRunning) return;
-
     requestAnimationFrame(this.gameLoop.bind(this));
 
-    const deltaTime = currentTime - this.lastTime;
-    if (deltaTime < 1000 / this.fps) return;
+    const deltaTime = (currentTime - this.lastTime) / 1000; // Convert to seconds
+    this.lastTime = currentTime;
 
-    if (!this.isPaused) {
-      this.update(deltaTime / 1000); // Convert to seconds
-      this.checkCollisions();
+    if (this.isPaused) {
+      this.menuManager.update();
+    } else if (this.isRunning) {
+      this.update(deltaTime);
+      this.collisionManager.checkCollisions();
     }
+
     this.render();
 
     if (this.DEBUG) {
       this.displayFPS(deltaTime);
     }
-
-    this.lastTime = currentTime;
   },
 
   update(deltaTime) {
@@ -67,46 +71,50 @@ const game = {
     this.scoreboard.update(deltaTime);
   },
 
-  checkCollisions() {
-    // Check collisions between entities
-    for (let i = 0; i < this.entities.length; i++) {
-      for (let j = i + 1; j < this.entities.length; j++) {
-        if (this.entities[i].isCollidingWith(this.entities[j])) {
-          this.entities[i].onCollision(this.entities[j]);
-          this.entities[j].onCollision(this.entities[i]);
-        }
-      }
-    }
-  },
-
   render() {
-    // Clear the canvas
     const ctx = this.canvas.getContext("2d");
     ctx.clearRect(0, 0, this.width, this.height);
 
-    // Render all entities
-    this.entities.forEach((entity) => entity.render(ctx));
-    this.enemyController.render(ctx);
-    this.projectileController.render(ctx);
-    this.scoreboard.render(ctx);
-
-    if (this.isPaused) {
-      this.menu.render(ctx);
+    if (this.isRunning) {
+      this.entities.forEach((entity) => entity.render(ctx));
+      this.enemyController.render(ctx);
+      this.projectileController.render(ctx);
+      this.scoreboard.render(ctx);
     }
+
+    this.menuManager.render(ctx);
   },
 
-  pause() {
-    this.isPaused = true;
-    this.menu.show();
-  },
-
-  resume() {
+  startGame() {
+    this.isRunning = true;
     this.isPaused = false;
-    this.menu.hide();
-    this.lastTime = performance.now();
+    this.reset();
+    this.enemyController.init();
   },
 
-  restart() {
+  pauseGame() {
+    this.isPaused = true;
+    this.menuManager.showMenu("pause");
+  },
+
+  resumeGame() {
+    this.isPaused = false;
+    this.menuManager.hideMenu();
+  },
+
+  restartGame() {
+    this.reset();
+    this.startGame();
+  },
+
+  endGame() {
+    this.isRunning = false;
+    const finalScore = this.scoreboard.score;
+    this.highScoreManager.addHighScore(prompt("Enter your name:"), finalScore);
+    this.menuManager.showMenu("gameOver");
+  },
+
+  reset() {
     this.score = 0;
     this.lives = 3;
     this.level = 1;
@@ -115,21 +123,27 @@ const game = {
     this.enemyController.reset();
     this.projectileController.reset();
     this.scoreboard.reset();
-    this.resume();
   },
 
   handleKeyDown(event) {
     if (event.key === "p" || event.key === "P") {
-      this.isPaused ? this.resume() : this.pause();
-    } else if (!this.isPaused) {
+      this.isPaused ? this.resumeGame() : this.pauseGame();
+    } else if (this.isRunning && !this.isPaused) {
       this.player.handleKeyDown(event);
     }
   },
 
   handleKeyUp(event) {
-    if (!this.isPaused) {
+    if (this.isRunning && !this.isPaused) {
       this.player.handleKeyUp(event);
     }
+  },
+
+  handleClick(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    this.menuManager.handleClick(x, y);
   },
 
   handleResize() {
@@ -152,23 +166,22 @@ const game = {
   },
 
   displayFPS(deltaTime) {
-    const fps = Math.round(1000 / deltaTime);
+    const fps = Math.round(1 / deltaTime);
     const ctx = this.canvas.getContext("2d");
     ctx.fillStyle = "white";
     ctx.font = "12px Arial";
     ctx.fillText(`FPS: ${fps}`, 10, 20);
   },
 
-  gameOver() {
-    this.isRunning = false;
-    alert(`Game Over! Your score: ${this.score}`);
-    this.restart();
-  },
-
   levelUp() {
     this.level++;
     this.enemyController.increaseLevel();
     // Add any level-up logic here
+  },
+
+  addScore(points) {
+    this.score += points;
+    this.scoreboard.addScore(points);
   },
 };
 
