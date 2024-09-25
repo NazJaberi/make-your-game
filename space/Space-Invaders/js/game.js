@@ -61,10 +61,10 @@ const game = {
 
     const images = {
       speedster: "assets/images/speedster.png",
-      // Add other images as needed
-      // For example:
-      // tank: 'assets/images/tank.png',
-      // background: 'assets/images/background.png',
+      tank: "assets/images/tank.png",
+      glasscannon: "assets/images/glasscannon.png",
+      allrounder: "assets/images/allrounder.png",
+      // background: 'assets/images/background.png', // Uncomment if you have a background image
     };
 
     assetsToLoad = Object.keys(images).length;
@@ -523,17 +523,6 @@ const game = {
     this.addAnnouncement(`${boss.name} has appeared!`, 5000);
   },
 
-  spawnPowerUps() {
-    if (!this.lastPowerUpSpawnTime) this.lastPowerUpSpawnTime = 0;
-    if (
-      performance.now() - this.lastPowerUpSpawnTime >
-      20000 + Math.random() * 10000
-    ) {
-      this.spawnPowerUp(Math.random() * this.canvas.width, -50);
-      this.lastPowerUpSpawnTime = performance.now();
-    }
-  },
-
   spawnPowerUp(x, y) {
     const rand = Math.random();
     let powerUp;
@@ -550,7 +539,7 @@ const game = {
     } else if (rand < 0.6) {
       powerUp = new BombPowerUp(x, y, this);
     } else if (rand < 0.7) {
-      powerUp = new SidekickPowerUp(x, y, this.player);
+      powerUp = new SidekickPowerUp(x, y, this.player, this); // Pass 'this' as the game object
     } else if (rand < 0.8) {
       powerUp = new MagnetPowerUp(x, y, this.player);
     } else if (rand < 0.9) {
@@ -560,7 +549,16 @@ const game = {
     }
     this.powerUps.push(powerUp);
   },
-
+  spawnPowerUps() {
+    if (!this.lastPowerUpSpawnTime) this.lastPowerUpSpawnTime = 0;
+    if (
+      performance.now() - this.lastPowerUpSpawnTime >
+      20000 + Math.random() * 10000
+    ) {
+      this.spawnPowerUp(Math.random() * this.canvas.width, -50);
+      this.lastPowerUpSpawnTime = performance.now();
+    }
+  },
   releaseEnergyWave() {
     for (let eIndex = this.enemies.length - 1; eIndex >= 0; eIndex--) {
       const enemy = this.enemies[eIndex];

@@ -255,11 +255,12 @@ class BombPowerUp extends PowerUp {
 }
 
 class SidekickPowerUp extends PowerUp {
-  constructor(x, y, player) {
+  constructor(x, y, player, game) {
     super(x, y);
     this.type = "Sidekick";
     this.duration = 30000;
     this.player = player;
+    this.game = game;
   }
 
   activate() {

@@ -31,14 +31,29 @@ class BasePlayer {
   }
 
   render(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height
-    );
+    if (this.game.assets[this.constructor.name.toLowerCase()]) {
+      ctx.drawImage(
+        this.game.assets[this.constructor.name.toLowerCase()],
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+    } else {
+      // Fallback to rectangle if image is not available
+      ctx.fillStyle = this.color;
+      ctx.fillRect(
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+    }
 
+    this.drawIndicators(ctx);
+  }
+
+  drawIndicators(ctx) {
     // Draw health bar
     ctx.fillStyle = "green";
     ctx.fillRect(
@@ -207,7 +222,6 @@ class BasePlayer {
   }
 }
 
-// Player subclasses
 class Speedster extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
@@ -238,70 +252,6 @@ class Speedster extends BasePlayer {
       this.isInvulnerable = false;
     }, 500); // Invulnerability duration
     return 500; // Duration of the special ability effect
-  }
-
-  render(ctx) {
-    // Use the speedster image if available
-    if (this.game.assets.speedster) {
-      ctx.drawImage(
-        this.game.assets.speedster, // The loaded image
-        this.x - this.width / 2, // X position
-        this.y - this.height / 2, // Y position
-        this.width, // Width to draw
-        this.height // Height to draw
-      );
-    } else {
-      // Fallback to rectangle if image is not available
-      ctx.fillStyle = this.color;
-      ctx.fillRect(
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
-    }
-
-    // Draw health bar
-    ctx.fillStyle = "green";
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y + this.height / 2 + 5,
-      (this.width * this.health) / this.maxHealth,
-      5
-    );
-
-    // Draw special ability indicator if active
-    if (this.isSpecialActive) {
-      ctx.strokeStyle = "yellow";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        this.x - this.width / 2 - 5,
-        this.y - this.height / 2 - 5,
-        this.width + 10,
-        this.height + 10
-      );
-    }
-
-    // Draw shield bubble
-    if (this.shieldCharges > 0) {
-      ctx.strokeStyle = "rgba(0, 0, 255, 0.5)";
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // Draw invulnerability indicator
-    if (this.isInvulnerable) {
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        this.x - this.width / 2 - 5,
-        this.y - this.height / 2 - 5,
-        this.width + 10,
-        this.height + 10
-      );
-    }
   }
 }
 
@@ -432,5 +382,9 @@ class Sidekick extends BasePlayer {
   shoot(currentTime) {
     // Shooting is handled in the player's shoot method
     return null;
+  }
+
+  render(ctx) {
+    super.render(ctx);
   }
 }
