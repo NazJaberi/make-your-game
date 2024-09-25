@@ -7,12 +7,14 @@ class MenuManager {
       pause: new PauseMenu(this),
       gameOver: new GameOverMenu(this),
     };
+    this.showMenu("main"); // Show main menu by default
   }
 
   showMenu(menuName) {
     if (this.menus[menuName]) {
       this.currentMenu = this.menus[menuName];
       this.currentMenu.show();
+      console.log(`Showing ${menuName} menu`);
     }
   }
 
@@ -20,6 +22,7 @@ class MenuManager {
     if (this.currentMenu) {
       this.currentMenu.hide();
       this.currentMenu = null;
+      console.log("Hiding menu");
     }
   }
 
@@ -36,9 +39,17 @@ class MenuManager {
   }
 
   handleClick(x, y) {
+    console.log(`MenuManager handling click at (${x}, ${y})`);
     if (this.currentMenu) {
+      console.log(`Current menu: ${this.currentMenu.constructor.name}`);
       this.currentMenu.handleClick(x, y);
+    } else {
+      console.log("No current menu");
     }
+  }
+
+  isMenuVisible() {
+    return this.currentMenu !== null;
   }
 }
 
@@ -49,15 +60,15 @@ class Menu {
   }
 
   show() {
-    // To be implemented in subclasses
+    console.log(`Showing ${this.constructor.name}`);
   }
 
   hide() {
-    // To be implemented in subclasses
+    console.log(`Hiding ${this.constructor.name}`);
   }
 
   update() {
-    // To be implemented in subclasses
+    // To be implemented in subclasses if needed
   }
 
   render(ctx) {
@@ -73,8 +84,11 @@ class Menu {
   }
 
   handleClick(x, y) {
-    this.buttons.forEach((button) => {
+    console.log(`Menu ${this.constructor.name} handling click`);
+    this.buttons.forEach((button, index) => {
+      console.log(`Checking button ${index}: ${button.text}`);
       if (button.isClicked(x, y)) {
+        console.log(`Button ${button.text} clicked`);
         button.onClick();
       }
     });
@@ -104,15 +118,18 @@ class MainMenu extends Menu {
         50,
         "High Scores",
         () => {
-          // Implement high scores functionality
           console.log("High Scores clicked");
         }
       ),
       new Button(this.manager.game.width / 2, 340, 200, 50, "Options", () => {
-        // Implement options menu
         console.log("Options clicked");
       }),
     ];
+  }
+
+  render(ctx) {
+    console.log("Rendering MainMenu");
+    super.render(ctx);
   }
 }
 
@@ -193,11 +210,12 @@ class Button {
   }
 
   isClicked(clickX, clickY) {
-    return (
+    const clicked =
       clickX >= this.x &&
       clickX <= this.x + this.width &&
       clickY >= this.y &&
-      clickY <= this.y + this.height
-    );
+      clickY <= this.y + this.height;
+    console.log(`Button "${this.text}" clicked: ${clicked}`);
+    return clicked;
   }
 }

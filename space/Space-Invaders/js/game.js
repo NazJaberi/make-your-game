@@ -9,12 +9,16 @@ const game = {
   score: 0,
   lives: 3,
   level: 1,
-  DEBUG: false,
+  DEBUG: true, // Set to true for debugging
 
   init() {
     this.canvas = document.getElementById("game-container");
     this.canvas.width = this.width;
     this.canvas.height = this.height;
+
+    // Add these lines to ensure proper canvas sizing
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
 
     // Initialize game objects
     try {
@@ -31,7 +35,12 @@ const game = {
       window.addEventListener("keydown", this.handleKeyDown.bind(this));
       window.addEventListener("keyup", this.handleKeyUp.bind(this));
       window.addEventListener("resize", this.handleResize.bind(this));
-      this.canvas.addEventListener("click", this.handleClick.bind(this));
+
+      // Replace the old click event listener with this new one
+      this.canvas.addEventListener("click", (event) => {
+        console.log("Canvas clicked");
+        this.handleClick(event);
+      });
 
       // Show main menu
       this.menuManager.showMenu("main");
@@ -39,6 +48,14 @@ const game = {
       // Start the game loop
       this.lastTime = performance.now();
       requestAnimationFrame(this.gameLoop.bind(this));
+
+      // Add this line at the end of the init method
+      console.log(
+        "Game initialized, canvas size:",
+        this.width,
+        "x",
+        this.height
+      );
     } catch (error) {
       console.error("Error initializing game:", error);
     }
@@ -86,28 +103,34 @@ const game = {
   },
 
   startGame() {
+    console.log("Starting game");
     this.isRunning = true;
     this.isPaused = false;
     this.reset();
     this.enemyController.init();
+    this.menuManager.hideMenu();
   },
 
   pauseGame() {
+    console.log("Pausing game");
     this.isPaused = true;
     this.menuManager.showMenu("pause");
   },
 
   resumeGame() {
+    console.log("Resuming game");
     this.isPaused = false;
     this.menuManager.hideMenu();
   },
 
   restartGame() {
+    console.log("Restarting game");
     this.reset();
     this.startGame();
   },
 
   endGame() {
+    console.log("Ending game");
     this.isRunning = false;
     const finalScore = this.scoreboard.score;
     this.highScoreManager.addHighScore(prompt("Enter your name:"), finalScore);
@@ -115,6 +138,7 @@ const game = {
   },
 
   reset() {
+    console.log("Resetting game");
     this.score = 0;
     this.lives = 3;
     this.level = 1;
@@ -143,15 +167,26 @@ const game = {
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    this.menuManager.handleClick(x, y);
+    console.log(`Click detected at (${x}, ${y})`);
+
+    if (this.menuManager.isMenuVisible()) {
+      console.log("Menu is visible, handling click");
+      this.menuManager.handleClick(x, y);
+    } else {
+      console.log("No menu visible, click not handled");
+    }
   },
 
   handleResize() {
+    console.log("Resizing game");
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     this.canvas.width = this.width;
     this.canvas.height = this.height;
     this.entities.forEach((entity) => entity.onResize(this.width, this.height));
+    this.menuManager.menus.main = new MainMenu(this.menuManager);
+    this.menuManager.menus.pause = new PauseMenu(this.menuManager);
+    this.menuManager.menus.gameOver = new GameOverMenu(this.menuManager);
   },
 
   addEntity(entity) {
@@ -174,6 +209,7 @@ const game = {
   },
 
   levelUp() {
+    console.log(`Leveling up to level ${this.level + 1}`);
     this.level++;
     this.enemyController.increaseLevel();
     // Add any level-up logic here
@@ -182,6 +218,7 @@ const game = {
   addScore(points) {
     this.score += points;
     this.scoreboard.addScore(points);
+    console.log(`Score increased by ${points}. New score: ${this.score}`);
   },
 };
 
