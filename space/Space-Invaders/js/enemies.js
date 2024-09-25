@@ -1,203 +1,406 @@
-class Enemy {
-  constructor(x, y, type) {
+class BaseEnemy {
+  constructor(x, y, stats) {
+    this.game = null; // Will be set when enemy is created
     this.x = x;
     this.y = y;
-    this.type = type;
-    this.width = 40;
-    this.height = 40;
-    this.speed = 50; // pixels per second
-    this.direction = 1; // 1 for right, -1 for left
-    this.shootProbability = 0.001; // Chance to shoot each frame
-    this.color = this.getColorByType();
-    this.points = this.getPointsByType();
+    this.width = stats.width || 40;
+    this.height = stats.height || 40;
+    this.speed = stats.speed || 1;
+    this.health = stats.health;
+    this.maxHealth = stats.health;
+    this.damage = stats.damage || 10;
+    this.color = stats.color || "green";
+    this.isInvulnerable = false;
+    this.lastAbilityTime = 0;
+    this.lastShotTime = 0;
+    this.fireRate = stats.fireRate || 0.5; // Default enemy fire rate
   }
 
-  update(deltaTime) {
-    this.x += this.speed * this.direction * deltaTime;
-
-    // Random shooting
-    if (Math.random() < this.shootProbability) {
-      this.shoot();
+  takeDamage(amount) {
+    if (this.isInvulnerable) {
+      return false;
     }
+    this.health -= amount;
+    return this.health <= 0;
   }
 
   render(ctx) {
     ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-  }
-
-  shoot() {
-    const projectile = new Projectile(
-      this.x + this.width / 2,
-      this.y + this.height,
-      Math.PI, // angle (straight down)
-      200, // speed
-      5, // radius
-      "#ff0000" // color
+    ctx.fillRect(
+      this.x - this.width / 2,
+      this.y - this.height / 2,
+      this.width,
+      this.height
     );
-    game.projectileController.addProjectile(projectile);
-  }
 
-  getColorByType() {
-    switch (this.type) {
-      case "easy":
-        return "#ff0000";
-      case "medium":
-        return "#ff7f00";
-      case "hard":
-        return "#ffff00";
-      default:
-        return "#ffffff";
+    // Draw health bar
+    ctx.fillStyle = "red";
+    ctx.fillRect(
+      this.x - this.width / 2,
+      this.y - this.height / 2 - 10,
+      (this.width * this.health) / this.maxHealth,
+      5
+    );
+
+    // Draw invulnerability indicator
+    if (this.isInvulnerable) {
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(
+        this.x - this.width / 2 - 2,
+        this.y - this.height / 2 - 2,
+        this.width + 4,
+        this.height + 4
+      );
     }
   }
 
-  getPointsByType() {
-    switch (this.type) {
-      case "easy":
-        return 10;
-      case "medium":
-        return 20;
-      case "hard":
-        return 30;
-      default:
-        return 5;
-    }
+  move() {
+    this.y += this.speed * (this.game.timeWarpActive ? 0.5 : 1);
   }
 
-  isCollidingWith(entity) {
-    return (
-      this.x < entity.x + entity.width &&
-      this.x + this.width > entity.x &&
-      this.y < entity.y + entity.height &&
-      this.y + this.height > entity.y
-    );
-  }
-
-  onCollision(entity) {
-    if (entity instanceof Projectile && !(entity instanceof EnemyProjectile)) {
-      game.removeEntity(this);
-      game.score += this.points;
+  update(currentTime) {
+    this.move();
+    // Default enemy shooting
+    if (this.fireRate > 0) {
+      if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
+        this.lastShotTime = currentTime;
+        const proj = new EnemyProjectile(
+          this.x,
+          this.y + this.height / 2,
+          this.damage,
+          5,
+          this.game
+        );
+        this.game.enemyProjectiles.push(proj);
+      }
     }
   }
 }
 
-class EnemyController {
-  constructor(game) {
-    this.game = game;
-    this.enemies = [];
-    this.moveDownDistance = 20;
-    this.speedIncrease = 1.2;
-    this.spawnInterval = 5; // seconds
-    this.lastSpawnTime = 0;
-  }
-
-  init() {
-    this.spawnWave();
-  }
-
-  update(deltaTime) {
-    let moveDown = false;
-    let leftmostX = Infinity;
-    let rightmostX = -Infinity;
-
-    this.enemies.forEach((enemy) => {
-      enemy.update(deltaTime);
-
-      // Find leftmost and rightmost enemies
-      leftmostX = Math.min(leftmostX, enemy.x);
-      rightmostX = Math.max(rightmostX, enemy.x + enemy.width);
-
-      // Check if enemies should move down
-      if (
-        (enemy.direction === 1 && enemy.x + enemy.width > this.game.width) ||
-        (enemy.direction === -1 && enemy.x < 0)
-      ) {
-        moveDown = true;
-      }
+class BasicDrone extends BaseEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 20,
+      speed: 1,
+      damage: 10,
+      color: "green",
+      fireRate: 0.2,
     });
+  }
+}
 
-    // Move enemies down and change direction if needed
-    if (moveDown) {
-      this.enemies.forEach((enemy) => {
-        enemy.y += this.moveDownDistance;
-        enemy.direction *= -1;
-        enemy.speed *= this.speedIncrease;
-      });
-    }
+class SpeedyZapper extends BaseEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 15,
+      speed: 2,
+      damage: 5,
+      color: "cyan",
+      fireRate: 0.3,
+    });
+    this.amplitude = 50;
+    this.frequency = 0.05;
+    this.startX = x;
+    this.age = 0;
+  }
 
-    // Spawn new wave if all enemies are destroyed
-    if (this.enemies.length === 0) {
-      this.spawnWave();
-    }
+  move() {
+    this.age++;
+    this.y += this.speed * (this.game.timeWarpActive ? 0.5 : 1);
+    this.x = this.startX + this.amplitude * Math.sin(this.frequency * this.age);
+  }
+}
 
-    // Spawn additional enemies over time
-    if (this.game.lastTime - this.lastSpawnTime > this.spawnInterval * 1000) {
-      this.spawnEnemy();
-      this.lastSpawnTime = this.game.lastTime;
-    }
+class ArmoredSaucer extends BaseEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 40,
+      speed: 0.5,
+      damage: 15,
+      color: "gray",
+      fireRate: 0.1,
+    });
+  }
 
-    // Check if enemies have reached the bottom
+  takeDamage(amount) {
+    // Reduces damage by half (simulate armor)
+    this.health -= amount / 2;
+    return this.health <= 0;
+  }
+}
+
+class SplittingCube extends BaseEnemy {
+  constructor(x, y, size = 40) {
+    super(x, y, {
+      health: size === 40 ? 30 : 15,
+      speed: 0.75,
+      damage: 10,
+      color: "orange",
+      width: size,
+      height: size,
+      fireRate: 0,
+    });
+    this.size = size;
+  }
+}
+
+class ShieldedOrb extends BaseEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 25,
+      speed: 1,
+      damage: 10,
+      color: "violet",
+      fireRate: 0.2,
+    });
+    this.shieldDuration = 2000; // 2 seconds
+    this.shieldCooldown = 5000; // Every 5 seconds
+    this.isShielded = false;
+    this.lastShieldTime = 0;
+  }
+
+  update(currentTime) {
+    super.update(currentTime);
     if (
-      this.enemies.some(
-        (enemy) => enemy.y + enemy.height > this.game.height - 100
-      )
+      currentTime - this.lastShieldTime >=
+      this.shieldCooldown + this.shieldDuration
     ) {
-      this.game.gameOver();
+      this.isShielded = true;
+      this.isInvulnerable = true;
+      this.lastShieldTime = currentTime;
+      setTimeout(() => {
+        this.isShielded = false;
+        this.isInvulnerable = false;
+      }, this.shieldDuration);
     }
   }
 
   render(ctx) {
-    this.enemies.forEach((enemy) => enemy.render(ctx));
-  }
-
-  spawnWave() {
-    const rows = 5;
-    const enemiesPerRow = 10;
-    const startX = 50;
-    const startY = 50;
-    const padding = 10;
-
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < enemiesPerRow; col++) {
-        const x = startX + col * (Enemy.prototype.width + padding);
-        const y = startY + row * (Enemy.prototype.height + padding);
-        const type = row === 0 ? "hard" : row < 3 ? "medium" : "easy";
-        const enemy = new Enemy(x, y, type);
-        this.enemies.push(enemy);
-        this.game.addEntity(enemy);
-      }
+    super.render(ctx);
+    if (this.isShielded) {
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.width / 2 + 5, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
+}
 
-  spawnEnemy() {
-    const x = Math.random() * (this.game.width - Enemy.prototype.width);
-    const y = 0;
-    const type =
-      Math.random() < 0.2 ? "hard" : Math.random() < 0.5 ? "medium" : "easy";
-    const enemy = new Enemy(x, y, type);
-    this.enemies.push(enemy);
-    this.game.addEntity(enemy);
+// Boss Classes
+class BossEnemy extends BaseEnemy {
+  constructor(x, y, stats) {
+    super(x, y, stats);
+    this.isBoss = true;
   }
 
-  removeEnemy(enemy) {
-    const index = this.enemies.indexOf(enemy);
-    if (index > -1) {
-      this.enemies.splice(index, 1);
-    }
+  render(ctx) {
+    super.render(ctx);
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(this.name, this.x, this.y - this.height);
   }
+}
 
-  reset() {
-    this.enemies.forEach((enemy) => this.game.removeEntity(enemy));
-    this.enemies = [];
-    this.init();
-  }
-
-  increaseLevel() {
-    this.speedIncrease *= 1.1;
-    this.spawnInterval *= 0.9;
-    this.enemies.forEach((enemy) => {
-      enemy.speed *= 1.1;
-      enemy.shootProbability *= 1.1;
+class Mothership extends BossEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 500,
+      speed: 0.25,
+      damage: 25,
+      color: "maroon",
+      width: 100,
+      height: 100,
     });
+    this.name = "Mothership";
+    this.lastDroneSpawnTime = 0;
+    this.droneSpawnInterval = 10000; // 10 seconds
+    this.lastLaserTime = 0;
+    this.laserInterval = 30000; // 30 seconds
+  }
+
+  update(currentTime) {
+    super.update(currentTime);
+
+    // Spawn Basic Drones
+    if (currentTime - this.lastDroneSpawnTime >= this.droneSpawnInterval) {
+      this.game.addEnemy(
+        new BasicDrone(
+          this.x + Math.random() * 100 - 50,
+          this.y + this.height / 2
+        )
+      );
+      this.lastDroneSpawnTime = currentTime;
+    }
+
+    // Fire Laser Beam (Special Attack)
+    if (currentTime - this.lastLaserTime >= this.laserInterval) {
+      this.game.fireLaserBeam(this);
+      this.lastLaserTime = currentTime;
+    }
+  }
+}
+
+class QuantumShifter extends BossEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 400,
+      speed: 1.5,
+      damage: 20,
+      color: "teal",
+      width: 80,
+      height: 80,
+    });
+    this.name = "Quantum Shifter";
+    this.lastTeleportTime = 0;
+    this.teleportInterval = 15000; // 15 seconds
+    this.lastBlackHoleTime = 0;
+    this.blackHoleInterval = 30000; // 30 seconds
+  }
+
+  update(currentTime) {
+    super.update(currentTime);
+
+    // Teleport
+    if (currentTime - this.lastTeleportTime >= this.teleportInterval) {
+      this.x = Math.random() * this.game.canvas.width;
+      this.lastTeleportTime = currentTime;
+    }
+
+    // Create Black Hole
+    if (currentTime - this.lastBlackHoleTime >= this.blackHoleInterval) {
+      this.game.createBlackHole(this);
+      this.lastBlackHoleTime = currentTime;
+    }
+  }
+}
+
+class HiveMind extends BossEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 450,
+      speed: 0.5,
+      damage: 15,
+      color: "olive",
+      width: 90,
+      height: 90,
+    });
+    this.name = "Hive Mind";
+    this.lastSwarmTime = 0;
+    this.swarmInterval = 10000; // 10 seconds
+    this.lastMindControlTime = 0;
+    this.mindControlInterval = 30000; // 30 seconds
+  }
+
+  update(currentTime) {
+    super.update(currentTime);
+
+    // Summon Swarm
+    if (currentTime - this.lastSwarmTime >= this.swarmInterval) {
+      for (let i = 0; i < 5; i++) {
+        this.game.addEnemy(
+          new SpeedyZapper(Math.random() * this.game.canvas.width, this.y)
+        );
+      }
+      this.lastSwarmTime = currentTime;
+    }
+
+    // Mind Control
+    if (currentTime - this.lastMindControlTime >= this.mindControlInterval) {
+      this.game.activateMindControl();
+      this.lastMindControlTime = currentTime;
+    }
+  }
+}
+
+class TechnoTitan extends BossEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 600,
+      speed: 0.3,
+      damage: 30,
+      color: "silver",
+      width: 110,
+      height: 110,
+    });
+    this.name = "Techno Titan";
+    this.weakPoints = [
+      { x: x - 30, y: y, width: 20, height: 20, destroyed: false },
+      { x: x + 30, y: y, width: 20, height: 20, destroyed: false },
+    ];
+    this.lastEMPTime = 0;
+    this.EMPInterval = 30000; // 30 seconds
+  }
+
+  takeDamage(amount) {
+    // Can only be damaged if weak points are destroyed
+    if (this.weakPoints.every((wp) => wp.destroyed)) {
+      super.takeDamage(amount);
+      return this.health <= 0;
+    }
+    return false;
+  }
+
+  update(currentTime) {
+    super.update(currentTime);
+
+    // EMP Blast
+    if (currentTime - this.lastEMPTime >= this.EMPInterval) {
+      this.game.activateEMP();
+      this.lastEMPTime = currentTime;
+    }
+  }
+
+  render(ctx) {
+    super.render(ctx);
+
+    // Draw weak points
+    ctx.fillStyle = "red";
+    this.weakPoints.forEach((wp) => {
+      if (!wp.destroyed) {
+        ctx.fillRect(
+          wp.x - wp.width / 2,
+          wp.y - wp.height / 2,
+          wp.width,
+          wp.height
+        );
+      }
+    });
+  }
+}
+
+class CosmicHydra extends BossEnemy {
+  constructor(x, y) {
+    super(x, y, {
+      health: 550,
+      speed: 0.4,
+      damage: 25,
+      color: "navy",
+      width: 100,
+      height: 100,
+    });
+    this.name = "Cosmic Hydra";
+    this.lastRegenTime = 0;
+    this.regenInterval = 5000; // 5 seconds
+    this.lastMissileTime = 0;
+    this.missileInterval = 20000; // 20 seconds
+  }
+
+  update(currentTime) {
+    super.update(currentTime);
+
+    // Regenerate Health
+    if (currentTime - this.lastRegenTime >= this.regenInterval) {
+      this.health = Math.min(this.health + 20, this.maxHealth);
+      this.lastRegenTime = currentTime;
+    }
+
+    // Fire Homing Missiles
+    if (currentTime - this.lastMissileTime >= this.missileInterval) {
+      this.game.fireHomingMissiles(this);
+      this.lastMissileTime = currentTime;
+    }
   }
 }

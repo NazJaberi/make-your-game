@@ -1,0 +1,60 @@
+Playable Characters:
+Speedster
+Description: A fast and agile character with high speed but lower damage output.
+Special Ability: Dodge Roll
+Effect: Performs a quick dash to dodge enemy attacks and becomes temporarily invulnerable.
+Tank
+Description: A heavily armored character with high health and defense but slower movement.
+Special Ability: Fortify
+Effect: Increases defense significantly for a short duration, reducing incoming damage.
+Glass Cannon
+Description: A fragile character with low health but very high damage output.
+Special Ability: Power Surge
+Effect: Temporarily doubles the damage dealt to enemies.
+All-Rounder
+Description: A balanced character with moderate stats in speed, damage, and defense.
+Special Ability: Energy Wave
+Effect: Releases an energy wave that damages all enemies on the screen.
+Enemies:
+Regular Enemies:
+Basic Drone
+Description: A standard enemy that moves downward and occasionally shoots at the player.
+Behavior: Slow movement and basic projectile attacks.
+Speedy Zapper
+Description: A fast-moving enemy that follows a zigzag pattern.
+Behavior: Moves quickly with a sine-wave motion and fires projectiles more frequently.
+Armored Saucer
+Description: An enemy with reinforced armor, reducing the damage it takes.
+Behavior: Slower movement; requires more hits to destroy due to damage reduction.
+Splitting Cube
+Description: An enemy that splits into smaller cubes when destroyed.
+Behavior: Upon death, it spawns two smaller versions of itself, each with reduced size and health.
+Shielded Orb
+Description: An enemy that periodically becomes invulnerable by activating a shield.
+Behavior: Cycles between vulnerable and shielded states; cannot be damaged while shielded.
+Boss Enemies:
+Mothership
+Description: A massive boss that can spawn additional enemies and perform powerful attacks.
+Special Abilities:
+Spawn Drones: Periodically releases Basic Drones to attack the player.
+Laser Beam: Fires a powerful laser beam that deals significant damage.
+Quantum Shifter
+Description: A boss capable of teleportation and manipulating space.
+Special Abilities:
+Teleport: Randomly teleports to different locations on the screen.
+Create Black Hole: Generates a black hole that pulls the player towards it.
+Hive Mind
+Description: A boss that controls swarms of enemies and can affect the player's controls.
+Special Abilities:
+Summon Swarm: Calls forth a swarm of Speedy Zappers.
+Mind Control: Temporarily reverses the player's controls.
+Techno Titan
+Description: A heavily armored boss with specific weak points that must be targeted.
+Special Abilities:
+Weak Points: Has destructible weak points that need to be destroyed before the main body can take damage.
+EMP Blast: Disables the player's special abilities temporarily.
+Cosmic Hydra
+Description: A regenerating boss with multiple offensive capabilities.
+Special Abilities:
+Regenerate Health: Periodically restores its own health.
+Homing Missiles: Fires missiles that track the player's position.

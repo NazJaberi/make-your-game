@@ -1,115 +1,60 @@
+// projectiles.js
+
 class Projectile {
-  constructor(x, y, angle, speed, radius, color, isEnemy = false) {
+  constructor(x, y, damage, angle = 0, piercing = false, splash = false) {
     this.x = x;
     this.y = y;
-    this.angle = angle;
-    this.speed = speed;
-    this.radius = radius;
-    this.color = color;
-    this.isEnemy = isEnemy;
-  }
-
-  update(deltaTime) {
-    this.x += Math.cos(this.angle) * this.speed * deltaTime;
-    this.y += Math.sin(this.angle) * this.speed * deltaTime;
+    this.width = 5;
+    this.height = 15;
+    this.speed = 7;
+    this.damage = damage;
+    this.angle = angle; // For spread shots
+    this.piercing = piercing;
+    this.splash = splash;
   }
 
   render(ctx) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-    ctx.closePath();
-  }
-
-  isOffScreen(width, height) {
-    return (
-      this.x < -this.radius ||
-      this.x > width + this.radius ||
-      this.y < -this.radius ||
-      this.y > height + this.radius
+    ctx.fillStyle = this.piercing ? "lime" : "white";
+    ctx.fillRect(
+      this.x - this.width / 2,
+      this.y - this.height / 2,
+      this.width,
+      this.height
     );
   }
 
-  isCollidingWith(entity) {
-    const dx = this.x - (entity.x + entity.width / 2);
-    const dy = this.y - (entity.y + entity.height / 2);
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    return distance < this.radius + Math.max(entity.width, entity.height) / 2;
+  move() {
+    this.x += Math.sin(this.angle) * this.speed;
+    this.y -= Math.cos(this.angle) * this.speed;
   }
 }
 
-class EnemyProjectile extends Projectile {
-  constructor(x, y, angle, speed, radius, color) {
-    super(x, y, angle, speed, radius, color, true);
-  }
-}
-
-class ProjectileController {
-  constructor(game) {
+class EnemyProjectile {
+  constructor(x, y, damage, speed = 5, game) {
+    this.x = x;
+    this.y = y;
+    this.width = 5;
+    this.height = 15;
+    this.speed = speed;
+    this.damage = damage;
     this.game = game;
-    this.projectiles = [];
-  }
-
-  update(deltaTime) {
-    this.projectiles.forEach((projectile, index) => {
-      projectile.update(deltaTime);
-
-      // Remove projectiles that are off-screen
-      if (projectile.isOffScreen(this.game.width, this.game.height)) {
-        this.projectiles.splice(index, 1);
-        return;
-      }
-
-      // Check collisions
-      this.game.entities.forEach((entity) => {
-        if (
-          (projectile.isEnemy && entity instanceof Player) ||
-          (!projectile.isEnemy && entity instanceof Enemy)
-        ) {
-          if (projectile.isCollidingWith(entity)) {
-            entity.onCollision(projectile);
-            this.projectiles.splice(index, 1);
-          }
-        }
-      });
-    });
   }
 
   render(ctx) {
-    this.projectiles.forEach((projectile) => projectile.render(ctx));
+    ctx.fillStyle = "red";
+    ctx.fillRect(
+      this.x - this.width / 2,
+      this.y - this.height / 2,
+      this.width,
+      this.height
+    );
   }
 
-  addProjectile(projectile) {
-    this.projectiles.push(projectile);
-  }
-
-  reset() {
-    this.projectiles = [];
+  move() {
+    this.y += this.speed * (this.game.timeWarpActive ? 0.5 : 1);
   }
 }
 
-// Helper function to create a player projectile
-function createPlayerProjectile(x, y) {
-  return new Projectile(
-    x,
-    y,
-    -Math.PI / 2, // Angle (upwards)
-    500, // Speed
-    3, // Radius
-    "#00ffff", // Color
-    false // Not an enemy projectile
-  );
-}
-
-// Helper function to create an enemy projectile
-function createEnemyProjectile(x, y) {
-  return new EnemyProjectile(
-    x,
-    y,
-    Math.PI / 2, // Angle (downwards)
-    300, // Speed
-    3, // Radius
-    "#ff0000" // Color
-  );
-}
+// Attach classes to the global window object
+window.Projectile = Projectile;
+window.EnemyProjectile = EnemyProjectile;

@@ -8,8 +8,6 @@ const game = {
   selectedPlayerIndex: 0,
   announcements: [],
 
-  assets: {}, // Added assets object to store loaded images
-
   init() {
     this.canvas = document.getElementById("game-container");
     this.ctx = this.canvas.getContext("2d");
@@ -41,10 +39,7 @@ const game = {
     this.isSpacePressed = false;
     this.isShiftPressed = false;
 
-    // Load assets before starting the game loop
-    this.loadAssets(() => {
-      this.gameLoop();
-    });
+    this.gameLoop();
 
     console.log(
       "Game initialized. Canvas size:",
@@ -52,42 +47,6 @@ const game = {
       "x",
       this.canvas.height
     );
-  },
-
-  // Asset loading function
-  loadAssets(callback) {
-    let assetsToLoad = 0;
-    let assetsLoaded = 0;
-
-    const images = {
-      speedster: "assets/images/speedster.png",
-      // Add other images as needed
-      // For example:
-      // tank: 'assets/images/tank.png',
-      // background: 'assets/images/background.png',
-    };
-
-    assetsToLoad = Object.keys(images).length;
-
-    if (assetsToLoad === 0) {
-      callback();
-      return;
-    }
-
-    for (const [key, src] of Object.entries(images)) {
-      const img = new Image();
-      img.src = src;
-      img.onload = () => {
-        assetsLoaded++;
-        if (assetsLoaded >= assetsToLoad) {
-          callback();
-        }
-      };
-      img.onerror = () => {
-        console.error(`Failed to load image: ${src}`);
-      };
-      this.assets[key] = img;
-    }
   },
 
   gameLoop(currentTime) {
@@ -175,17 +134,6 @@ const game = {
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.isRunning && !this.isPaused) {
-      // Draw background image if available
-      if (this.assets.background) {
-        this.ctx.drawImage(
-          this.assets.background,
-          0,
-          0,
-          this.canvas.width,
-          this.canvas.height
-        );
-      }
-
       this.player.render(this.ctx);
       this.enemies.forEach((enemy) => enemy.render(this.ctx));
       this.projectiles.forEach((proj) => proj.render(this.ctx));
