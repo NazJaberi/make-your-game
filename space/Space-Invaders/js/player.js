@@ -3,8 +3,8 @@ class BasePlayer {
     this.game = null; // Will be set when player is created
     this.x = x;
     this.y = y;
-    this.width = 50;
-    this.height = 50;
+    this.width = 100;
+    this.height = 100;
 
     this.baseSpeed = stats.speed;
     this.speed = stats.speed;
@@ -357,7 +357,7 @@ class AllRounder extends BasePlayer {
 }
 
 class Sidekick extends BasePlayer {
-  constructor(x, y, player) {
+  constructor(x, y, player, game) {
     super(x, y, {
       speed: player.speed,
       fireRate: player.fireRate,
@@ -369,14 +369,31 @@ class Sidekick extends BasePlayer {
     });
     this.color = "lightgray";
     this.player = player;
+    this.game = game; // Set the game property
     this.width = 30;
     this.height = 30;
+    this.offsetX = 70;
+    this.offsetY = -30;
+    this.angle = 0;
   }
 
   update(currentTime) {
-    // Follow the player
-    this.x = this.player.x + 50;
-    this.y = this.player.y;
+    // Circular motion around the offset point
+    this.angle += 0.05; // Adjust this value to change rotation speed
+    const circleRadius = 10; // Adjust this value to change the circle size
+
+    this.x = this.player.x + this.offsetX + Math.cos(this.angle) * circleRadius;
+    this.y = this.player.y + this.offsetY + Math.sin(this.angle) * circleRadius;
+
+    // Ensure the sidekick stays within the game boundaries
+    this.x = Math.max(
+      this.width / 2,
+      Math.min(this.x, this.game.canvas.width - this.width / 2)
+    );
+    this.y = Math.max(
+      this.height / 2,
+      Math.min(this.y, this.game.canvas.height - this.height / 2)
+    );
   }
 
   shoot(currentTime) {
@@ -385,6 +402,24 @@ class Sidekick extends BasePlayer {
   }
 
   render(ctx) {
-    super.render(ctx);
+    if (this.game && this.game.assets && this.game.assets.sidekick) {
+      ctx.drawImage(
+        this.game.assets.sidekick,
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+    } else {
+      // Fallback to simple rectangle if image is not available
+      ctx.fillStyle = this.color;
+      ctx.fillRect(
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+    }
+    this.drawIndicators(ctx);
   }
 }

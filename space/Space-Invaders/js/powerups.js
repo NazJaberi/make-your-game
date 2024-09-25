@@ -267,7 +267,8 @@ class SidekickPowerUp extends PowerUp {
     this.player.sidekick = new Sidekick(
       this.player.x + 50,
       this.player.y,
-      this.player
+      this.player,
+      this.game
     );
     this.game.entities.push(this.player.sidekick);
   }

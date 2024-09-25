@@ -1,10 +1,12 @@
+// enemies.js
+
 class BaseEnemy {
   constructor(x, y, stats) {
     this.game = null; // Will be set when enemy is created
     this.x = x;
     this.y = y;
-    this.width = stats.width || 40;
-    this.height = stats.height || 40;
+    this.width = stats.width || 70;
+    this.height = stats.height || 70;
     this.speed = stats.speed || 1;
     this.health = stats.health;
     this.maxHealth = stats.health;
@@ -14,6 +16,7 @@ class BaseEnemy {
     this.lastAbilityTime = 0;
     this.lastShotTime = 0;
     this.fireRate = stats.fireRate || 0.5; // Default enemy fire rate
+    this.imageKey = stats.imageKey || null; // Key to access the image in game.assets
   }
 
   takeDamage(amount) {
@@ -25,13 +28,25 @@ class BaseEnemy {
   }
 
   render(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height
-    );
+    if (this.game.assets[this.imageKey]) {
+      // If an image is available, draw the image
+      ctx.drawImage(
+        this.game.assets[this.imageKey],
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+    } else {
+      // Fallback to rectangle if image is not available
+      ctx.fillStyle = this.color;
+      ctx.fillRect(
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+    }
 
     // Draw health bar
     ctx.fillStyle = "red";
@@ -86,6 +101,7 @@ class BasicDrone extends BaseEnemy {
       damage: 10,
       color: "green",
       fireRate: 0.2,
+      imageKey: "basicDrone",
     });
   }
 }
@@ -98,6 +114,7 @@ class SpeedyZapper extends BaseEnemy {
       damage: 5,
       color: "cyan",
       fireRate: 0.3,
+      imageKey: "speedyZapper",
     });
     this.amplitude = 50;
     this.frequency = 0.05;
@@ -120,6 +137,7 @@ class ArmoredSaucer extends BaseEnemy {
       damage: 15,
       color: "gray",
       fireRate: 0.1,
+      imageKey: "armoredSaucer",
     });
   }
 
@@ -140,6 +158,7 @@ class SplittingCube extends BaseEnemy {
       width: size,
       height: size,
       fireRate: 0,
+      imageKey: "splittingCube",
     });
     this.size = size;
   }
@@ -153,6 +172,7 @@ class ShieldedOrb extends BaseEnemy {
       damage: 10,
       color: "violet",
       fireRate: 0.2,
+      imageKey: "shieldedOrb",
     });
     this.shieldDuration = 2000; // 2 seconds
     this.shieldCooldown = 5000; // Every 5 seconds
@@ -193,6 +213,8 @@ class BossEnemy extends BaseEnemy {
   constructor(x, y, stats) {
     super(x, y, stats);
     this.isBoss = true;
+    this.imageKey = stats.imageKey || null;
+    this.name = stats.name || "Boss";
   }
 
   render(ctx) {
@@ -200,7 +222,7 @@ class BossEnemy extends BaseEnemy {
     ctx.fillStyle = "white";
     ctx.font = "20px Arial";
     ctx.textAlign = "center";
-    ctx.fillText(this.name, this.x, this.y - this.height);
+    ctx.fillText(this.name, this.x, this.y - this.height / 2 - 10);
   }
 }
 
@@ -213,8 +235,9 @@ class Mothership extends BossEnemy {
       color: "maroon",
       width: 100,
       height: 100,
+      imageKey: "mothership",
+      name: "Mothership",
     });
-    this.name = "Mothership";
     this.lastDroneSpawnTime = 0;
     this.droneSpawnInterval = 10000; // 10 seconds
     this.lastLaserTime = 0;
@@ -252,8 +275,9 @@ class QuantumShifter extends BossEnemy {
       color: "teal",
       width: 80,
       height: 80,
+      imageKey: "quantumShifter",
+      name: "Quantum Shifter",
     });
-    this.name = "Quantum Shifter";
     this.lastTeleportTime = 0;
     this.teleportInterval = 15000; // 15 seconds
     this.lastBlackHoleTime = 0;
@@ -286,8 +310,9 @@ class HiveMind extends BossEnemy {
       color: "olive",
       width: 90,
       height: 90,
+      imageKey: "hiveMind",
+      name: "Hive Mind",
     });
-    this.name = "Hive Mind";
     this.lastSwarmTime = 0;
     this.swarmInterval = 10000; // 10 seconds
     this.lastMindControlTime = 0;
@@ -324,8 +349,9 @@ class TechnoTitan extends BossEnemy {
       color: "silver",
       width: 110,
       height: 110,
+      imageKey: "technoTitan",
+      name: "Techno Titan",
     });
-    this.name = "Techno Titan";
     this.weakPoints = [
       { x: x - 30, y: y, width: 20, height: 20, destroyed: false },
       { x: x + 30, y: y, width: 20, height: 20, destroyed: false },
@@ -380,8 +406,9 @@ class CosmicHydra extends BossEnemy {
       color: "navy",
       width: 100,
       height: 100,
+      imageKey: "cosmicHydra",
+      name: "Cosmic Hydra",
     });
-    this.name = "Cosmic Hydra";
     this.lastRegenTime = 0;
     this.regenInterval = 5000; // 5 seconds
     this.lastMissileTime = 0;

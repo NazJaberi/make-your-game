@@ -1,9 +1,29 @@
 const game = {
   playerTypes: [
-    { name: "Speedster", class: Speedster, color: "yellow" },
-    { name: "Tank", class: Tank, color: "blue" },
-    { name: "Glass Cannon", class: GlassCannon, color: "red" },
-    { name: "All-Rounder", class: AllRounder, color: "purple" },
+    {
+      name: "Speedster",
+      class: Speedster,
+      color: "yellow",
+      stats: { speed: 15, fireRate: 2, damage: 3, health: 60, defense: 5 },
+    },
+    {
+      name: "Tank",
+      class: Tank,
+      color: "blue",
+      stats: { speed: 5, fireRate: 1, damage: 7, health: 150, defense: 25 },
+    },
+    {
+      name: "Glass Cannon",
+      class: GlassCannon,
+      color: "red",
+      stats: { speed: 10, fireRate: 3, damage: 7, health: 50, defense: 0 },
+    },
+    {
+      name: "All Rounder",
+      class: AllRounder,
+      color: "purple",
+      stats: { speed: 10, fireRate: 2, damage: 5, health: 100, defense: 10 },
+    },
   ],
   selectedPlayerIndex: 0,
   announcements: [],
@@ -17,6 +37,7 @@ const game = {
     this.canvas.height = window.innerHeight;
 
     this.menuManager = new MenuManager(this);
+    this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
     this.menuManager.showMenu("main");
 
     this.enemies = [];
@@ -54,6 +75,14 @@ const game = {
     );
   },
 
+  handleMouseMove(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if (this.menuManager.currentMenu) {
+      this.menuManager.handleMouseMove(x, y);
+    }
+  },
   // Asset loading function
   loadAssets(callback) {
     let assetsToLoad = 0;
@@ -64,7 +93,24 @@ const game = {
       tank: "assets/images/tank.png",
       glasscannon: "assets/images/glasscannon.png",
       allrounder: "assets/images/allrounder.png",
-      // background: 'assets/images/background.png', // Uncomment if you have a background image
+      sidekick: "assets/images/sidekick.png",
+
+      // Enemy images
+      basicDrone: "assets/images/Basic_Drone.png",
+      speedyZapper: "assets/images/zapper.png",
+      armoredSaucer: "assets/images/saucer.png",
+      splittingCube: "assets/images/cube.png",
+      shieldedOrb: "assets/images/shielded.png",
+
+      // Boss images
+      mothership: "assets/images/mothership.png",
+      quantumShifter: "assets/images/Quantum_Shifter.png",
+      hiveMind: "assets/images/hive.png",
+      technoTitan: "assets/images/titan.png",
+      cosmicHydra: "assets/images/hydra.png",
+
+      //background
+      background: "assets/images/background.png",
     };
 
     assetsToLoad = Object.keys(images).length;
@@ -539,7 +585,7 @@ const game = {
     } else if (rand < 0.6) {
       powerUp = new BombPowerUp(x, y, this);
     } else if (rand < 0.7) {
-      powerUp = new SidekickPowerUp(x, y, this.player, this); // Pass 'this' as the game object
+      powerUp = new SidekickPowerUp(x, y, this.player, this);
     } else if (rand < 0.8) {
       powerUp = new MagnetPowerUp(x, y, this.player);
     } else if (rand < 0.9) {
