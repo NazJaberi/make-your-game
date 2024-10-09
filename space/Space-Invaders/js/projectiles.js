@@ -11,21 +11,26 @@ class Projectile {
     this.angle = angle; // For spread shots
     this.piercing = piercing;
     this.splash = splash;
+
+    this.element = document.createElement("div");
+    this.element.className = "projectile";
+    this.element.style.position = "absolute";
+    this.element.style.width = `${this.width}px`;
+    this.element.style.height = `${this.height}px`;
+    this.element.style.backgroundColor = this.piercing ? "lime" : "white";
+    this.render();
   }
 
-  render(ctx) {
-    ctx.fillStyle = this.piercing ? "lime" : "white";
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height
-    );
+  render() {
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
+    this.element.style.transform = `rotate(${this.angle}rad)`;
   }
 
   move() {
     this.x += Math.sin(this.angle) * this.speed;
     this.y -= Math.cos(this.angle) * this.speed;
+    this.render();
   }
 }
 
@@ -38,20 +43,24 @@ class EnemyProjectile {
     this.speed = speed;
     this.damage = damage;
     this.game = game;
+
+    this.element = document.createElement("div");
+    this.element.className = "enemy-projectile";
+    this.element.style.position = "absolute";
+    this.element.style.width = `${this.width}px`;
+    this.element.style.height = `${this.height}px`;
+    this.element.style.backgroundColor = "red";
+    this.render();
   }
 
-  render(ctx) {
-    ctx.fillStyle = "red";
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height
-    );
+  render() {
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
   }
 
   move() {
     this.y += this.speed * (this.game.timeWarpActive ? 0.5 : 1);
+    this.render();
   }
 }
 

@@ -4,18 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invade</title>
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-      }
-      canvas {
-        display: block;
-      }
-    </style>
+    <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <canvas id="game-container"></canvas>
+    <div id="game-container">
+      <div id="player" class="game-object"></div>
+      <div id="hud">
+        <div id="score">Score: 0</div>
+        <div id="health">Health: 100</div>
+        <div id="special-cooldown"></div>
+      </div>
+    </div>
     <script src="js/menu.js"></script>
     <script src="js/player.js"></script>
     <script src="js/projectiles.js"></script>

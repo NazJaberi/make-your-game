@@ -3,309 +3,186 @@ class MenuManager {
     this.game = game;
     this.currentMenu = null;
     this.buttonHoverIndex = -1;
+    this.menuContainer = document.createElement("div");
+    this.menuContainer.className = "menu-container";
+    this.menuContainer.style.position = "absolute";
+    this.menuContainer.style.top = "0";
+    this.menuContainer.style.left = "0";
+    this.menuContainer.style.width = "100%";
+    this.menuContainer.style.height = "100%";
+    this.menuContainer.style.display = "none";
+    this.game.container.appendChild(this.menuContainer);
   }
 
   showMenu(menuName) {
     this.currentMenu = menuName;
+    this.menuContainer.style.display = "block";
+    this.renderMenu();
     console.log(`Showing menu: ${menuName}`);
   }
 
   hideMenu() {
     this.currentMenu = null;
+    this.menuContainer.style.display = "none";
   }
 
   handleClick(x, y) {
-    switch (this.currentMenu) {
-      case "main":
-        if (
-          this.isPointInButton(
-            x,
-            y,
-            this.game.canvas.width / 2,
-            this.game.canvas.height / 2 + 50
-          )
-        ) {
-          this.game.showCharacterSelect();
-        }
-        break;
-      case "characterSelect":
-        const canvasWidth = this.game.canvas.width;
-        const characterCount = this.game.playerTypes.length;
-        const characterWidth = 220;
-        const characterHeight = 350;
-        const totalWidth = characterCount * characterWidth;
-        const startX = (canvasWidth - totalWidth) / 2;
-        const centerY = this.game.canvas.height / 2 - 50;
-
-        this.game.playerTypes.forEach((type, index) => {
-          const charX = startX + index * characterWidth;
-          const charY = centerY - characterHeight / 2;
-
-          if (
-            x >= charX &&
-            x < charX + characterWidth &&
-            y >= charY &&
-            y < charY + characterHeight
-          ) {
-            this.game.selectedPlayerIndex = index;
-            this.game.startGame();
-          }
-        });
-        break;
-      case "pause":
-        if (
-          this.isPointInButton(
-            x,
-            y,
-            this.game.canvas.width / 2,
-            this.game.canvas.height / 2 - 20
-          )
-        ) {
-          this.game.resumeGame();
-        } else if (
-          this.isPointInButton(
-            x,
-            y,
-            this.game.canvas.width / 2,
-            this.game.canvas.height / 2 + 60
-          )
-        ) {
-          this.game.returnToMainMenu();
-        }
-        break;
-      case "gameOver":
-        if (
-          this.isPointInButton(
-            x,
-            y,
-            this.game.canvas.width / 2,
-            this.game.canvas.height / 2 + 50
-          )
-        ) {
-          this.game.returnToMainMenu();
-        }
-        break;
-    }
+    const clickEvent = new MouseEvent("click", {
+      clientX: x,
+      clientY: y,
+    });
+    this.menuContainer.dispatchEvent(clickEvent);
   }
 
   handleMouseMove(x, y) {
-    this.buttonHoverIndex = -1;
-    if (this.currentMenu === "characterSelect") {
-      const canvasWidth = this.game.canvas.width;
-      const characterCount = this.game.playerTypes.length;
-      const characterWidth = 220;
-      const characterHeight = 350;
-      const totalWidth = characterCount * characterWidth;
-      const startX = (canvasWidth - totalWidth) / 2;
-      const centerY = this.game.canvas.height / 2 - 50;
-
-      this.game.playerTypes.forEach((type, index) => {
-        const charX = startX + index * characterWidth;
-        const charY = centerY - characterHeight / 2;
-
-        if (
-          x >= charX &&
-          x < charX + characterWidth &&
-          y >= charY &&
-          y < charY + characterHeight
-        ) {
-          this.buttonHoverIndex = index;
-        }
-      });
-    }
-  }
-  isPointInButton(x, y, buttonX, buttonY) {
-    return Math.abs(x - buttonX) < 60 && Math.abs(y - buttonY) < 20;
+    const moveEvent = new MouseEvent("mousemove", {
+      clientX: x,
+      clientY: y,
+    });
+    this.menuContainer.dispatchEvent(moveEvent);
   }
 
-  render(ctx) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.fillRect(0, 0, this.game.canvas.width, this.game.canvas.height);
-
-    ctx.fillStyle = "white";
-    ctx.font = "40px Arial";
-    ctx.textAlign = "center";
-
+  renderMenu() {
+    this.menuContainer.innerHTML = "";
     switch (this.currentMenu) {
       case "main":
-        this.renderMainMenu(ctx);
+        this.renderMainMenu();
         break;
       case "characterSelect":
-        this.renderCharacterSelect(ctx);
+        this.renderCharacterSelect();
         break;
       case "pause":
-        this.renderPauseMenu(ctx);
+        this.renderPauseMenu();
         break;
       case "gameOver":
-        this.renderGameOver(ctx);
+        this.renderGameOver();
         break;
     }
   }
 
-  renderMainMenu(ctx) {
-    ctx.fillText(
-      "Space Invaders",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 - 50
-    );
-    this.renderButton(
-      ctx,
-      "Start Game",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 + 50
-    );
+  renderMainMenu() {
+    const title = document.createElement("h1");
+    title.textContent = "Space Invaders";
+    title.style.textAlign = "center";
+    title.style.marginTop = "20%";
+
+    const startButton = this.createButton("Start Game", () => {
+      this.game.showCharacterSelect();
+    });
+
+    this.menuContainer.appendChild(title);
+    this.menuContainer.appendChild(startButton);
   }
 
-  renderCharacterSelect(ctx) {
-    const canvasWidth = this.game.canvas.width;
-    const canvasHeight = this.game.canvas.height;
+  renderCharacterSelect() {
+    const title = document.createElement("h2");
+    title.textContent = "Select Your Character";
+    title.style.textAlign = "center";
 
-    ctx.fillStyle = "white";
-    ctx.font = "40px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Select Your Character", canvasWidth / 2, 80);
-
-    const characterCount = this.game.playerTypes.length;
-    const characterWidth = 220;
-    const characterHeight = 350;
-    const totalWidth = characterCount * characterWidth;
-    const startX = (canvasWidth - totalWidth) / 2;
+    const characterContainer = document.createElement("div");
+    characterContainer.style.display = "flex";
+    characterContainer.style.justifyContent = "center";
+    characterContainer.style.flexWrap = "wrap";
 
     this.game.playerTypes.forEach((type, index) => {
-      const x = startX + index * characterWidth + characterWidth / 2;
-      const y = canvasHeight / 2 - 50;
+      const charBox = document.createElement("div");
+      charBox.className = "character-box";
+      charBox.style.width = "220px";
+      charBox.style.height = "350px";
+      charBox.style.margin = "10px";
+      charBox.style.border = "2px solid white";
+      charBox.style.borderRadius = "10px";
+      charBox.style.padding = "10px";
+      charBox.style.cursor = "pointer";
 
-      // Draw character box
-      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-      ctx.fillRect(
-        x - characterWidth / 2,
-        y - characterHeight / 2,
-        characterWidth,
-        characterHeight
-      );
+      const charName = document.createElement("h3");
+      charName.textContent = type.name;
+      charName.style.textAlign = "center";
 
-      // Glow effect for hover state
-      if (index === this.buttonHoverIndex) {
-        ctx.shadowColor = type.color;
-        ctx.shadowBlur = 20;
-        ctx.strokeStyle = type.color;
-      } else {
-        ctx.shadowColor = "transparent";
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "white";
-      }
+      const charImage = document.createElement("img");
+      charImage.src =
+        this.game.assets[type.name.toLowerCase().replace(/\s+/g, "")].src;
+      charImage.style.width = "100px";
+      charImage.style.height = "100px";
+      charImage.style.display = "block";
+      charImage.style.margin = "0 auto";
 
-      ctx.lineWidth = 2;
-      ctx.strokeRect(
-        x - characterWidth / 2,
-        y - characterHeight / 2,
-        characterWidth,
-        characterHeight
-      );
-
-      // Reset shadow for text and images
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-
-      // Draw character name
-      ctx.fillStyle = "white";
-      ctx.font = "20px Arial";
-      ctx.textAlign = "center";
-      const nameParts = type.name.split(" ");
-      nameParts.forEach((part, i) => {
-        ctx.fillText(part, x, y - characterHeight / 2 + 30 + i * 25);
+      const statsList = document.createElement("ul");
+      Object.entries(type.stats).forEach(([key, value]) => {
+        const statItem = document.createElement("li");
+        statItem.textContent = `${key}: ${value}`;
+        statsList.appendChild(statItem);
       });
 
-      // Draw the actual spaceship
-      const imageName = type.name.toLowerCase().replace(/\s+/g, "");
-      if (this.game.assets[imageName]) {
-        ctx.drawImage(this.game.assets[imageName], x - 50, y - 70, 100, 100);
-      } else {
-        console.log(`Asset not found for ${type.name} (${imageName})`);
-      }
+      charBox.appendChild(charName);
+      charBox.appendChild(charImage);
+      charBox.appendChild(statsList);
 
-      // Draw character stats
-      ctx.font = "16px Arial";
-      ctx.textAlign = "left";
-      const stats = [
-        `Speed: ${type.stats.speed}`,
-        `Fire Rate: ${type.stats.fireRate}`,
-        `Damage: ${type.stats.damage}`,
-        `Health: ${type.stats.health}`,
-        `Defense: ${type.stats.defense}`,
-      ];
-      stats.forEach((stat, statIndex) => {
-        ctx.fillText(
-          stat,
-          x - characterWidth / 2 + 10,
-          y + 50 + statIndex * 25
-        );
+      charBox.addEventListener("click", () => {
+        this.game.selectedPlayerIndex = index;
+        this.game.startGame();
       });
+
+      charBox.addEventListener("mouseover", () => {
+        charBox.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+      });
+
+      charBox.addEventListener("mouseout", () => {
+        charBox.style.backgroundColor = "transparent";
+      });
+
+      characterContainer.appendChild(charBox);
     });
+
+    this.menuContainer.appendChild(title);
+    this.menuContainer.appendChild(characterContainer);
   }
 
-  hexToRgb(hex) {
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
-          result[3],
-          16
-        )}`
-      : null;
+  renderPauseMenu() {
+    const title = document.createElement("h2");
+    title.textContent = "Paused";
+    title.style.textAlign = "center";
+
+    const resumeButton = this.createButton("Resume", () => {
+      this.game.resumeGame();
+    });
+
+    const mainMenuButton = this.createButton("Main Menu", () => {
+      this.game.returnToMainMenu();
+    });
+
+    this.menuContainer.appendChild(title);
+    this.menuContainer.appendChild(resumeButton);
+    this.menuContainer.appendChild(mainMenuButton);
   }
 
-  renderPauseMenu(ctx) {
-    ctx.fillText(
-      "Paused",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 - 100
-    );
-    this.renderButton(
-      ctx,
-      "Resume",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 - 20
-    );
-    this.renderButton(
-      ctx,
-      "Main Menu",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 + 60
-    );
+  renderGameOver() {
+    const title = document.createElement("h2");
+    title.textContent = "Game Over";
+    title.style.textAlign = "center";
+
+    const score = document.createElement("p");
+    score.textContent = `Score: ${this.game.score}`;
+    score.style.textAlign = "center";
+
+    const mainMenuButton = this.createButton("Return to Main Menu", () => {
+      this.game.returnToMainMenu();
+    });
+
+    this.menuContainer.appendChild(title);
+    this.menuContainer.appendChild(score);
+    this.menuContainer.appendChild(mainMenuButton);
   }
 
-  renderGameOver(ctx) {
-    ctx.fillText(
-      "Game Over",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 - 50
-    );
-    ctx.fillText(
-      `Score: ${this.game.score}`,
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2
-    );
-    this.renderButton(
-      ctx,
-      "Return to Main Menu",
-      this.game.canvas.width / 2,
-      this.game.canvas.height / 2 + 50
-    );
-  }
-
-  renderButton(ctx, text, x, y, isHovered = false) {
-    ctx.fillStyle = isHovered
-      ? "rgba(255, 255, 255, 0.3)"
-      : "rgba(255, 255, 255, 0.1)";
-    ctx.fillRect(x - 60, y - 20, 120, 40);
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x - 60, y - 20, 120, 40);
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(text, x, y + 7);
+  createButton(text, onClick) {
+    const button = document.createElement("button");
+    button.textContent = text;
+    button.style.display = "block";
+    button.style.margin = "10px auto";
+    button.style.padding = "10px 20px";
+    button.style.fontSize = "18px";
+    button.style.cursor = "pointer";
+    button.addEventListener("click", onClick);
+    return button;
   }
 }

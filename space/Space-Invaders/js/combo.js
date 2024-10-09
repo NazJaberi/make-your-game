@@ -5,6 +5,32 @@ class ComboSystem {
     this.comboLevel = 1;
     this.lastKillTime = 0;
     this.comboTimer = 5000; // 5 seconds
+
+    // Create DOM elements
+    this.comboElement = document.createElement("div");
+    this.comboElement.className = "combo-meter";
+    this.comboElement.style.position = "absolute";
+    this.comboElement.style.top = "10px";
+    this.comboElement.style.left = "50%";
+    this.comboElement.style.transform = "translateX(-50%)";
+    this.comboElement.style.textAlign = "center";
+    this.comboElement.style.color = "white";
+    this.comboElement.style.font = "20px Arial";
+
+    this.comboTimerBar = document.createElement("div");
+    this.comboTimerBar.className = "combo-timer-bar";
+    this.comboTimerBar.style.position = "absolute";
+    this.comboTimerBar.style.top = "40px";
+    this.comboTimerBar.style.left = "50%";
+    this.comboTimerBar.style.transform = "translateX(-50%)";
+    this.comboTimerBar.style.width = "200px";
+    this.comboTimerBar.style.height = "10px";
+    this.comboTimerBar.style.backgroundColor = "yellow";
+    this.comboTimerBar.style.border = "1px solid white";
+
+    // Add elements to the game container
+    this.game.container.appendChild(this.comboElement);
+    this.game.container.appendChild(this.comboTimerBar);
   }
 
   incrementCombo() {
@@ -44,39 +70,20 @@ class ComboSystem {
     if (currentTime - this.lastKillTime > this.comboTimer) {
       this.resetCombo();
     }
+    this.render();
   }
 
-  render(ctx) {
-    // Draw combo meter
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(
-      `Combo: x${this.comboLevel} (${this.comboCount})`,
-      this.game.canvas.width / 2,
-      30
-    );
+  render() {
+    // Update combo text
+    this.comboElement.textContent = `Combo: x${this.comboLevel} (${this.comboCount})`;
 
-    // Draw combo timer bar
+    // Update combo timer bar
     const timeLeft = Math.max(
       0,
       this.comboTimer - (performance.now() - this.lastKillTime)
     );
     const barWidth = 200;
-    const barHeight = 10;
-    ctx.fillStyle = "yellow";
-    ctx.fillRect(
-      this.game.canvas.width / 2 - barWidth / 2,
-      40,
-      (barWidth * timeLeft) / this.comboTimer,
-      barHeight
-    );
-    ctx.strokeStyle = "white";
-    ctx.strokeRect(
-      this.game.canvas.width / 2 - barWidth / 2,
-      40,
-      barWidth,
-      barHeight
-    );
+    const fillWidth = (barWidth * timeLeft) / this.comboTimer;
+    this.comboTimerBar.style.width = `${fillWidth}px`;
   }
 }

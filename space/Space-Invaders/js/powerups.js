@@ -6,21 +6,24 @@ class PowerUp {
     this.type = "";
     this.duration = 0;
     this.startTime = 0;
+
+    this.element = document.createElement("div");
+    this.element.className = "power-up";
+    this.element.style.position = "absolute";
+    this.element.style.width = `${this.size}px`;
+    this.element.style.height = `${this.size}px`;
+    this.element.style.left = `${this.x - this.size / 2}px`;
+    this.element.style.top = `${this.y - this.size / 2}px`;
   }
 
-  render(ctx) {
-    ctx.fillStyle = "yellow";
-    ctx.fillRect(
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size
-    );
+  render() {
+    this.element.style.left = `${this.x - this.size / 2}px`;
+    this.element.style.top = `${this.y - this.size / 2}px`;
   }
 
   update() {
-    // Move downwards
     this.y += 2;
+    this.render();
   }
 
   activate() {
@@ -38,6 +41,7 @@ class RapidFirePowerUp extends PowerUp {
     this.type = "RapidFire";
     this.duration = 10000;
     this.player = player;
+    this.element.classList.add("rapid-fire");
   }
 
   activate() {
@@ -46,13 +50,6 @@ class RapidFirePowerUp extends PowerUp {
 
   deactivate() {
     this.player.fireRate = this.player.baseFireRate;
-  }
-
-  render(ctx) {
-    ctx.fillStyle = "orange";
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
-    ctx.fill();
   }
 }
 
@@ -63,6 +60,7 @@ class ShieldBubblePowerUp extends PowerUp {
     this.duration = 15000;
     this.player = player;
     this.player.shieldCharges = 3; // Absorb up to 3 hits
+    this.element.classList.add("shield-bubble");
   }
 
   activate() {
@@ -72,13 +70,6 @@ class ShieldBubblePowerUp extends PowerUp {
   deactivate() {
     this.player.shieldCharges = 0;
   }
-
-  render(ctx) {
-    ctx.fillStyle = "blue";
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
-    ctx.fill();
-  }
 }
 
 class SpreadShotPowerUp extends PowerUp {
@@ -87,6 +78,7 @@ class SpreadShotPowerUp extends PowerUp {
     this.type = "SpreadShot";
     this.duration = 12000;
     this.player = player;
+    this.element.classList.add("spread-shot");
   }
 
   activate() {
@@ -96,16 +88,6 @@ class SpreadShotPowerUp extends PowerUp {
   deactivate() {
     this.player.spreadShotActive = false;
   }
-
-  render(ctx) {
-    ctx.fillStyle = "green";
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y - this.size / 2);
-    ctx.lineTo(this.x + this.size / 2, this.y + this.size / 2);
-    ctx.lineTo(this.x - this.size / 2, this.y + this.size / 2);
-    ctx.closePath();
-    ctx.fill();
-  }
 }
 
 class MagnetPowerUp extends PowerUp {
@@ -114,6 +96,7 @@ class MagnetPowerUp extends PowerUp {
     this.type = "Magnet";
     this.duration = 20000;
     this.player = player;
+    this.element.classList.add("magnet");
   }
 
   activate() {
@@ -123,16 +106,6 @@ class MagnetPowerUp extends PowerUp {
   deactivate() {
     this.player.magnetActive = false;
   }
-
-  render(ctx) {
-    ctx.fillStyle = "purple";
-    ctx.fillRect(
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size
-    );
-  }
 }
 
 class TimeWarpPowerUp extends PowerUp {
@@ -141,6 +114,7 @@ class TimeWarpPowerUp extends PowerUp {
     this.type = "TimeWarp";
     this.duration = 8000;
     this.game = game;
+    this.element.classList.add("time-warp");
   }
 
   activate() {
@@ -150,16 +124,6 @@ class TimeWarpPowerUp extends PowerUp {
   deactivate() {
     this.game.timeWarpActive = false;
   }
-
-  render(ctx) {
-    ctx.fillStyle = "lightblue";
-    ctx.fillRect(
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size
-    );
-  }
 }
 
 class PiercingShotPowerUp extends PowerUp {
@@ -168,6 +132,7 @@ class PiercingShotPowerUp extends PowerUp {
     this.type = "PiercingShot";
     this.duration = 15000;
     this.player = player;
+    this.element.classList.add("piercing-shot");
   }
 
   activate() {
@@ -177,16 +142,6 @@ class PiercingShotPowerUp extends PowerUp {
   deactivate() {
     this.player.piercingShotActive = false;
   }
-
-  render(ctx) {
-    ctx.fillStyle = "lime";
-    ctx.fillRect(
-      this.x - this.size / 4,
-      this.y - this.size / 2,
-      this.size / 2,
-      this.size
-    );
-  }
 }
 
 class HealthPack extends PowerUp {
@@ -194,6 +149,7 @@ class HealthPack extends PowerUp {
     super(x, y);
     this.type = "HealthPack";
     this.player = player;
+    this.element.classList.add("health-pack");
   }
 
   activate() {
@@ -206,29 +162,6 @@ class HealthPack extends PowerUp {
   deactivate() {
     // No action needed
   }
-
-  render(ctx) {
-    ctx.fillStyle = "red";
-    ctx.fillRect(
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size
-    );
-    ctx.fillStyle = "white";
-    ctx.fillRect(
-      this.x - this.size / 8,
-      this.y - this.size / 4,
-      this.size / 4,
-      this.size / 2
-    );
-    ctx.fillRect(
-      this.x - this.size / 4,
-      this.y - this.size / 8,
-      this.size / 2,
-      this.size / 4
-    );
-  }
 }
 
 class BombPowerUp extends PowerUp {
@@ -236,6 +169,7 @@ class BombPowerUp extends PowerUp {
     super(x, y);
     this.type = "Bomb";
     this.game = game;
+    this.element.classList.add("bomb");
   }
 
   activate() {
@@ -244,13 +178,6 @@ class BombPowerUp extends PowerUp {
 
   deactivate() {
     // Instant effect
-  }
-
-  render(ctx) {
-    ctx.fillStyle = "darkred";
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
-    ctx.fill();
   }
 }
 
@@ -261,6 +188,7 @@ class SidekickPowerUp extends PowerUp {
     this.duration = 30000;
     this.player = player;
     this.game = game;
+    this.element.classList.add("sidekick");
   }
 
   activate() {
@@ -271,6 +199,7 @@ class SidekickPowerUp extends PowerUp {
       this.game
     );
     this.game.entities.push(this.player.sidekick);
+    this.game.container.appendChild(this.player.sidekick.element);
   }
 
   deactivate() {
@@ -278,17 +207,10 @@ class SidekickPowerUp extends PowerUp {
     if (index > -1) {
       this.game.entities.splice(index, 1);
     }
+    if (this.player.sidekick && this.player.sidekick.element) {
+      this.player.sidekick.element.remove();
+    }
     this.player.sidekick = null;
-  }
-
-  render(ctx) {
-    ctx.fillStyle = "silver";
-    ctx.fillRect(
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size
-    );
   }
 }
 
@@ -297,6 +219,7 @@ class UltimateChargePowerUp extends PowerUp {
     super(x, y);
     this.type = "UltimateCharge";
     this.player = player;
+    this.element.classList.add("ultimate-charge");
   }
 
   activate() {
@@ -305,12 +228,5 @@ class UltimateChargePowerUp extends PowerUp {
 
   deactivate() {
     // Instant effect
-  }
-
-  render(ctx) {
-    ctx.fillStyle = this.player.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
-    ctx.fill();
   }
 }

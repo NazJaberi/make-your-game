@@ -15,7 +15,92 @@ body {
   height: 100%;
 }
 
-/* These styles will be useful for any HTML-based UI elements we might add later */
+.game-object {
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#player {
+  width: 50px;
+  height: 50px;
+}
+
+.enemy {
+  width: 40px;
+  height: 40px;
+}
+
+.projectile {
+  width: 10px;
+  height: 20px;
+  background-color: white;
+}
+
+.enemy-projectile {
+  width: 10px;
+  height: 20px;
+  background-color: red;
+}
+
+.powerup {
+  width: 30px;
+  height: 30px;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+#special-cooldown {
+  width: 100px;
+  height: 10px;
+  background-color: #333;
+  margin-top: 5px;
+}
+
+#special-cooldown::before {
+  content: "";
+  display: block;
+  height: 100%;
+  background-color: #4caf50;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.menu-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.character-box {
+  width: 220px;
+  height: 350px;
+  margin: 10px;
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.character-box:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 button {
   margin: 10px;
   padding: 10px 20px;
@@ -29,6 +114,45 @@ button {
 
 button:hover {
   background-color: #45a049;
+}
+
+.announcement {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  transition: opacity 1s;
+}
+
+.combo-meter {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  color: white;
+  text-align: center;
+}
+
+.combo-timer-bar {
+  width: 200px;
+  height: 10px;
+  background-color: #333;
+  margin-top: 5px;
+}
+
+.combo-timer-bar::before {
+  content: "";
+  display: block;
+  height: 100%;
+  background-color: yellow;
+  width: 100%;
+  transition: width 0.1s linear;
 }
 
 .hidden {

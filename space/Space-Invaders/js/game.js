@@ -27,33 +27,34 @@ const game = {
   ],
   selectedPlayerIndex: 0,
   announcements: [],
-
-  assets: {}, // Added assets object to store loaded images
+  assets: {},
 
   init() {
-    this.canvas = document.getElementById("game-container");
-    this.ctx = this.canvas.getContext("2d");
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    this.container = document.getElementById("game-container");
+    this.container.style.width = `${window.innerWidth}px`;
+    this.container.style.height = `${window.innerHeight}px`;
 
     this.menuManager = new MenuManager(this);
-    this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
+    this.container.addEventListener(
+      "mousemove",
+      this.handleMouseMove.bind(this)
+    );
     this.menuManager.showMenu("main");
 
     this.enemies = [];
     this.projectiles = [];
     this.enemyProjectiles = [];
     this.powerUps = [];
-    this.entities = []; // For sidekicks or other entities
+    this.entities = [];
 
     this.isRunning = false;
     this.isPaused = false;
     this.score = 0;
     this.comboSystem = new ComboSystem(this);
 
-    this.startTime = 0; // For tracking game duration
+    this.startTime = 0;
 
-    this.canvas.addEventListener("click", this.handleClick.bind(this));
+    this.container.addEventListener("click", this.handleClick.bind(this));
     window.addEventListener("keydown", this.handleKeyDown.bind(this));
     window.addEventListener("keyup", this.handleKeyUp.bind(this));
 
@@ -62,28 +63,27 @@ const game = {
     this.isSpacePressed = false;
     this.isShiftPressed = false;
 
-    // Load assets before starting the game loop
     this.loadAssets(() => {
       this.gameLoop();
     });
 
     console.log(
-      "Game initialized. Canvas size:",
-      this.canvas.width,
+      "Game initialized. Container size:",
+      this.container.offsetWidth,
       "x",
-      this.canvas.height
+      this.container.offsetHeight
     );
   },
 
   handleMouseMove(event) {
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = this.container.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     if (this.menuManager.currentMenu) {
       this.menuManager.handleMouseMove(x, y);
     }
   },
-  // Asset loading function
+
   loadAssets(callback) {
     let assetsToLoad = 0;
     let assetsLoaded = 0;
@@ -94,22 +94,16 @@ const game = {
       glasscannon: "assets/images/glasscannon.png",
       allrounder: "assets/images/allrounder.png",
       sidekick: "assets/images/sidekick.png",
-
-      // Enemy images
       basicDrone: "assets/images/Basic_Drone.png",
       speedyZapper: "assets/images/zapper.png",
       armoredSaucer: "assets/images/saucer.png",
       splittingCube: "assets/images/cube.png",
       shieldedOrb: "assets/images/shielded.png",
-
-      // Boss images
       mothership: "assets/images/mothership.png",
       quantumShifter: "assets/images/Quantum_Shifter.png",
       hiveMind: "assets/images/hive.png",
       technoTitan: "assets/images/titan.png",
       cosmicHydra: "assets/images/hydra.png",
-
-      //background
       background: "assets/images/background.png",
     };
 
@@ -140,14 +134,12 @@ const game = {
     if (!this.lastUpdateTime) this.lastUpdateTime = currentTime;
     const deltaTime = currentTime - this.lastUpdateTime;
     this.update(currentTime, deltaTime);
-    this.render(currentTime);
     this.lastUpdateTime = currentTime;
     requestAnimationFrame(this.gameLoop.bind(this));
   },
 
   update(currentTime, deltaTime) {
     if (this.isRunning && !this.isPaused) {
-      // Player movement
       if (this.isLeftPressed) {
         this.player.move(-1);
       }
@@ -157,37 +149,11 @@ const game = {
 
       this.player.update(currentTime);
 
-      this.projectiles.forEach((proj, index) => {
-        proj.move();
-        if (proj.y < 0 || proj.x < 0 || proj.x > this.canvas.width)
-          this.projectiles.splice(index, 1);
-      });
-
-      this.enemyProjectiles.forEach((proj, index) => {
-        proj.move();
-        if (proj.y > this.canvas.height) this.enemyProjectiles.splice(index, 1);
-      });
-
-      this.powerUps.forEach((powerUp, index) => {
-        powerUp.update();
-        if (powerUp.y > this.canvas.height) this.powerUps.splice(index, 1);
-      });
-
-      this.entities.forEach((entity) => {
-        entity.update(currentTime);
-      });
-
-      // Update Enemies
-      this.enemies.forEach((enemy, index) => {
-        enemy.update(currentTime);
-        if (enemy.y > this.canvas.height + 100) {
-          this.enemies.splice(index, 1);
-          const playerDead = this.player.takeDamage(enemy.damage);
-          if (playerDead) {
-            this.gameOver();
-          }
-        }
-      });
+      this.updateProjectiles();
+      this.updateEnemyProjectiles();
+      this.updatePowerUps();
+      this.updateEntities(currentTime);
+      this.updateEnemies(currentTime);
 
       this.spawnEnemies(currentTime);
       this.spawnPowerUps();
@@ -198,98 +164,117 @@ const game = {
         const newProjectiles = this.player.shoot(currentTime);
         if (newProjectiles) {
           this.projectiles.push(...newProjectiles);
+          newProjectiles.forEach((proj) =>
+            this.container.appendChild(proj.element)
+          );
         }
       }
 
-      // Handle special ability activation
       if (this.isShiftPressed) {
         this.player.useSpecialAbility(currentTime);
         this.isShiftPressed = false;
       }
 
-      // Update combo system
       this.comboSystem.update(currentTime);
-
-      // Update announcements
       this.updateAnnouncements(currentTime);
+      this.updateHUD();
     }
   },
 
-  render(currentTime) {
-    // Clear canvas
-    this.ctx.fillStyle = "black";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    if (this.isRunning && !this.isPaused) {
-      // Draw background image if available
-      if (this.assets.background) {
-        this.ctx.drawImage(
-          this.assets.background,
-          0,
-          0,
-          this.canvas.width,
-          this.canvas.height
-        );
+  updateProjectiles() {
+    this.projectiles.forEach((proj, index) => {
+      proj.move();
+      if (proj.y < 0 || proj.x < 0 || proj.x > this.container.offsetWidth) {
+        proj.element.remove();
+        this.projectiles.splice(index, 1);
+      } else {
+        proj.element.style.left = `${proj.x}px`;
+        proj.element.style.top = `${proj.y}px`;
       }
+    });
+  },
 
-      this.player.render(this.ctx);
-      this.enemies.forEach((enemy) => enemy.render(this.ctx));
-      this.projectiles.forEach((proj) => proj.render(this.ctx));
-      this.enemyProjectiles.forEach((proj) => proj.render(this.ctx));
-      this.powerUps.forEach((powerUp) => powerUp.render(this.ctx));
-      this.entities.forEach((entity) => entity.render(this.ctx));
+  updateEnemyProjectiles() {
+    this.enemyProjectiles.forEach((proj, index) => {
+      proj.move();
+      if (proj.y > this.container.offsetHeight) {
+        proj.element.remove();
+        this.enemyProjectiles.splice(index, 1);
+      } else {
+        proj.element.style.left = `${proj.x}px`;
+        proj.element.style.top = `${proj.y}px`;
+      }
+    });
+  },
 
-      // Display HUD
-      this.ctx.fillStyle = "white";
-      this.ctx.font = "20px Arial";
-      this.ctx.textAlign = "left";
-      this.ctx.fillText(`Score: ${this.score}`, 10, 30);
-      this.ctx.fillText(
-        `Health: ${Math.max(0, Math.floor(this.player.health))}`,
-        10,
-        60
-      );
+  updatePowerUps() {
+    this.powerUps.forEach((powerUp, index) => {
+      powerUp.update();
+      if (powerUp.y > this.container.offsetHeight) {
+        powerUp.element.remove();
+        this.powerUps.splice(index, 1);
+      } else {
+        powerUp.element.style.left = `${powerUp.x}px`;
+        powerUp.element.style.top = `${powerUp.y}px`;
+      }
+    });
+  },
 
-      // Render special ability cooldown
-      const cooldownPercentage =
-        this.player.getSpecialCooldownPercentage(currentTime);
-      this.ctx.fillStyle = cooldownPercentage === 1 ? "green" : "red";
-      this.ctx.fillRect(10, 90, 100 * cooldownPercentage, 10);
-      this.ctx.strokeStyle = "white";
-      this.ctx.strokeRect(10, 90, 100, 10);
-      this.ctx.fillStyle = "white";
-      this.ctx.fillText("Special", 120, 100);
+  updateEntities(currentTime) {
+    this.entities.forEach((entity) => {
+      entity.update(currentTime);
+      entity.element.style.left = `${entity.x}px`;
+      entity.element.style.top = `${entity.y}px`;
+    });
+  },
 
-      // Render combo system
-      this.comboSystem.render(this.ctx);
+  updateEnemies(currentTime) {
+    this.enemies.forEach((enemy, index) => {
+      enemy.update(currentTime);
+      if (enemy.y > this.container.offsetHeight + 100) {
+        enemy.element.remove();
+        this.enemies.splice(index, 1);
+        const playerDead = this.player.takeDamage(enemy.damage);
+        if (playerDead) {
+          this.gameOver();
+        }
+      } else {
+        enemy.element.style.left = `${enemy.x}px`;
+        enemy.element.style.top = `${enemy.y}px`;
+      }
+    });
+  },
 
-      // Render announcements
-      this.renderAnnouncements();
-    }
+  updateHUD() {
+    document.getElementById("score").textContent = `Score: ${this.score}`;
+    document.getElementById("health").textContent = `Health: ${Math.max(
+      0,
+      Math.floor(this.player.health)
+    )}`;
 
-    if (this.menuManager.currentMenu) {
-      this.menuManager.render(this.ctx);
-    }
+    const cooldownPercentage = this.player.getSpecialCooldownPercentage(
+      performance.now()
+    );
+    const specialCooldown = document.getElementById("special-cooldown");
+    specialCooldown.style.width = `${cooldownPercentage * 100}%`;
+    specialCooldown.style.backgroundColor =
+      cooldownPercentage === 1 ? "green" : "red";
   },
 
   addAnnouncement(message, duration = 3000) {
-    this.announcements.push(new Announcement(message, duration));
+    const announcement = document.createElement("div");
+    announcement.className = "announcement";
+    announcement.textContent = message;
+    this.container.appendChild(announcement);
+    setTimeout(() => announcement.remove(), duration);
   },
 
   updateAnnouncements(currentTime) {
-    this.announcements = this.announcements.filter((announcement) =>
-      announcement.update(currentTime)
-    );
-  },
-
-  renderAnnouncements() {
-    this.announcements.forEach((announcement) =>
-      announcement.render(this.ctx, this.canvas.width, this.canvas.height)
-    );
+    // No need to update DOM-based announcements
   },
 
   handleClick(event) {
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = this.container.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
@@ -349,18 +334,17 @@ const game = {
 
     const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
     this.player = new PlayerClass(
-      this.canvas.width / 2,
-      this.canvas.height - 100
+      this.container.offsetWidth / 2,
+      this.container.offsetHeight - 100
     );
-    this.player.game = this; // Set reference to game
+    this.player.game = this;
     this.entities.push(this.player);
+    this.container.appendChild(this.player.element);
 
-    // Reset timers
     this.lastEnemySpawnTime = 0;
     this.lastBossSpawnTime = 0;
     this.lastPowerUpSpawnTime = 0;
 
-    // Status effects
     this.isMindControlled = false;
     this.isEMPDissed = false;
     this.timeWarpActive = false;
@@ -403,7 +387,13 @@ const game = {
   },
 
   checkCollisions() {
-    // Check projectile-enemy collisions
+    this.checkProjectileEnemyCollisions();
+    this.checkPlayerEnemyCollisions();
+    this.checkEnemyProjectilePlayerCollisions();
+    this.checkPlayerPowerUpCollisions();
+  },
+
+  checkProjectileEnemyCollisions() {
     for (let pIndex = this.projectiles.length - 1; pIndex >= 0; pIndex--) {
       const proj = this.projectiles[pIndex];
       let projectileRemoved = false;
@@ -412,13 +402,13 @@ const game = {
 
         if (this.isColliding(proj, enemy)) {
           if (!proj.piercing) {
+            proj.element.remove();
             this.projectiles.splice(pIndex, 1);
             projectileRemoved = true;
           }
 
           const enemyDead = enemy.takeDamage(proj.damage);
           if (enemyDead) {
-            // Handle Splitting Cube
             if (enemy instanceof SplittingCube && enemy.size > 20) {
               this.addEnemy(
                 new SplittingCube(enemy.x - 10, enemy.y, enemy.size / 2)
@@ -427,18 +417,17 @@ const game = {
                 new SplittingCube(enemy.x + 10, enemy.y, enemy.size / 2)
               );
             }
+            enemy.element.remove();
             this.enemies.splice(eIndex, 1);
             this.score += (enemy.isBoss ? 100 : 10) * this.getScoreMultiplier();
             this.comboSystem.incrementCombo();
 
-            // Chance to drop a power-up
             if (Math.random() < 0.1) {
               this.spawnPowerUp(enemy.x, enemy.y);
             }
           }
 
           if (proj.splash) {
-            // Deal splash damage to nearby enemies
             this.enemies.forEach((nearbyEnemy) => {
               if (
                 nearbyEnemy !== enemy &&
@@ -454,12 +443,14 @@ const game = {
       }
       if (projectileRemoved) continue;
     }
+  },
 
-    // Check player-enemy collisions
+  checkPlayerEnemyCollisions() {
     for (let eIndex = this.enemies.length - 1; eIndex >= 0; eIndex--) {
       const enemy = this.enemies[eIndex];
 
       if (this.isColliding(enemy, this.player)) {
+        enemy.element.remove();
         this.enemies.splice(eIndex, 1);
         const playerDead = this.player.takeDamage(enemy.damage);
         if (playerDead) {
@@ -469,11 +460,13 @@ const game = {
         }
       }
     }
+  },
 
-    // Check enemy projectile collisions with player
+  checkEnemyProjectilePlayerCollisions() {
     for (let pIndex = this.enemyProjectiles.length - 1; pIndex >= 0; pIndex--) {
       const proj = this.enemyProjectiles[pIndex];
       if (this.isColliding(proj, this.player)) {
+        proj.element.remove();
         this.enemyProjectiles.splice(pIndex, 1);
         const playerDead = this.player.takeDamage(proj.damage);
         if (playerDead) {
@@ -483,11 +476,13 @@ const game = {
         }
       }
     }
+  },
 
-    // Check player-powerUp collisions
+  checkPlayerPowerUpCollisions() {
     for (let pIndex = this.powerUps.length - 1; pIndex >= 0; pIndex--) {
       const powerUp = this.powerUps[pIndex];
       if (this.isColliding(powerUp, this.player)) {
+        powerUp.element.remove();
         this.powerUps.splice(pIndex, 1);
         this.player.activatePowerUp(powerUp);
         this.addAnnouncement(`${powerUp.type} activated!`);
@@ -497,56 +492,59 @@ const game = {
 
   isColliding(rect1, rect2) {
     return !(
-      rect1.x + rect1.width / 2 < rect2.x - rect2.width / 2 ||
-      rect1.x - rect1.width / 2 > rect2.x + rect2.width / 2 ||
-      rect1.y + rect1.height / 2 < rect2.y - rect2.height / 2 ||
-      rect1.y - rect1.height / 2 > rect2.y + rect2.height / 2
+      rect1.x + rect1.width < rect2.x ||
+      rect1.x > rect2.x + rect2.width ||
+      rect1.y + rect1.height < rect2.y ||
+      rect1.y > rect2.y + rect2.height
     );
   },
 
   addEnemy(enemy) {
     enemy.game = this;
     this.enemies.push(enemy);
+    this.container.appendChild(enemy.element);
   },
 
   spawnEnemies(currentTime) {
     const elapsedMinutes = (currentTime - this.startTime) / 60000;
-
-    // Gradually increase spawn rate
     let spawnInterval = Math.max(2000 - elapsedMinutes * 100, 500);
     if (!this.lastEnemySpawnTime) this.lastEnemySpawnTime = currentTime;
 
     if (currentTime - this.lastEnemySpawnTime >= spawnInterval) {
-      // Spawn Basic Drone
-      this.addEnemy(new BasicDrone(Math.random() * this.canvas.width, -50));
+      this.addEnemy(
+        new BasicDrone(Math.random() * this.container.offsetWidth, -50)
+      );
       this.lastEnemySpawnTime = currentTime;
     }
 
-    // Introduce new enemies at specific times
     if (elapsedMinutes >= 1 && Math.random() < 0.02) {
-      // Speedy Zapper
-      this.addEnemy(new SpeedyZapper(Math.random() * this.canvas.width, -50));
+      this.addEnemy(
+        new SpeedyZapper(Math.random() * this.container.offsetWidth, -50)
+      );
     }
 
     if (elapsedMinutes >= 2 && Math.random() < 0.01) {
-      // Armored Saucer
-      this.addEnemy(new ArmoredSaucer(Math.random() * this.canvas.width, -50));
+      this.addEnemy(
+        new ArmoredSaucer(Math.random() * this.container.offsetWidth, -50)
+      );
     }
 
     if (elapsedMinutes >= 3 && Math.random() < 0.005) {
-      // Splitting Cube
-      this.addEnemy(new SplittingCube(Math.random() * this.canvas.width, -50));
+      this.addEnemy(
+        new SplittingCube(Math.random() * this.container.offsetWidth, -50)
+      );
     }
 
     if (elapsedMinutes >= 4 && Math.random() < 0.002) {
-      // Shielded Orb
-      this.addEnemy(new ShieldedOrb(Math.random() * this.canvas.width, -50));
+      this.addEnemy(
+        new ShieldedOrb(Math.random() * this.container.offsetWidth, -50)
+      );
     }
 
     if (elapsedMinutes >= 2) {
       if (
         !this.lastBossSpawnTime ||
-        currentTime - this.lastBossSpawnTime >= 120000 + Math.random() * 60000 // 2-3 minutes
+        currentTime - this.lastBossSpawnTime >= 120000 + Math.random() * 60000
       ) {
         this.spawnBoss();
         this.lastBossSpawnTime = currentTime;
@@ -563,53 +561,48 @@ const game = {
       CosmicHydra,
     ];
     const BossClass = bosses[Math.floor(Math.random() * bosses.length)];
-    const boss = new BossClass(this.canvas.width / 2, -150);
+    const boss = new BossClass(this.container.offsetWidth / 2, -150);
     boss.game = this;
     this.enemies.push(boss);
+    this.container.appendChild(boss.element);
     this.addAnnouncement(`${boss.name} has appeared!`, 5000);
   },
 
   spawnPowerUp(x, y) {
     const rand = Math.random();
     let powerUp;
-    if (rand < 0.1) {
-      powerUp = new RapidFirePowerUp(x, y, this.player);
-    } else if (rand < 0.2) {
-      powerUp = new SpreadShotPowerUp(x, y, this.player);
-    } else if (rand < 0.3) {
-      powerUp = new ShieldBubblePowerUp(x, y, this.player);
-    } else if (rand < 0.4) {
-      powerUp = new PiercingShotPowerUp(x, y, this.player);
-    } else if (rand < 0.5) {
-      powerUp = new HealthPack(x, y, this.player);
-    } else if (rand < 0.6) {
-      powerUp = new BombPowerUp(x, y, this);
-    } else if (rand < 0.7) {
-      powerUp = new SidekickPowerUp(x, y, this.player, this);
-    } else if (rand < 0.8) {
-      powerUp = new MagnetPowerUp(x, y, this.player);
-    } else if (rand < 0.9) {
-      powerUp = new UltimateChargePowerUp(x, y, this.player);
-    } else {
-      powerUp = new TimeWarpPowerUp(x, y, this);
-    }
+    if (rand < 0.1) powerUp = new RapidFirePowerUp(x, y, this.player);
+    else if (rand < 0.2) powerUp = new SpreadShotPowerUp(x, y, this.player);
+    else if (rand < 0.3) powerUp = new ShieldBubblePowerUp(x, y, this.player);
+    else if (rand < 0.4) powerUp = new PiercingShotPowerUp(x, y, this.player);
+    else if (rand < 0.5) powerUp = new HealthPack(x, y, this.player);
+    else if (rand < 0.6) powerUp = new BombPowerUp(x, y, this);
+    else if (rand < 0.7) powerUp = new SidekickPowerUp(x, y, this.player, this);
+    else if (rand < 0.8) powerUp = new MagnetPowerUp(x, y, this.player);
+    else if (rand < 0.9) powerUp = new UltimateChargePowerUp(x, y, this.player);
+    else powerUp = new TimeWarpPowerUp(x, y, this);
+
     this.powerUps.push(powerUp);
+    this.container.appendChild(powerUp.element);
   },
+
   spawnPowerUps() {
     if (!this.lastPowerUpSpawnTime) this.lastPowerUpSpawnTime = 0;
     if (
       performance.now() - this.lastPowerUpSpawnTime >
       20000 + Math.random() * 10000
     ) {
-      this.spawnPowerUp(Math.random() * this.canvas.width, -50);
+      this.spawnPowerUp(Math.random() * this.container.offsetWidth, -50);
       this.lastPowerUpSpawnTime = performance.now();
     }
   },
+
   releaseEnergyWave() {
     for (let eIndex = this.enemies.length - 1; eIndex >= 0; eIndex--) {
       const enemy = this.enemies[eIndex];
       const enemyDead = enemy.takeDamage(20);
       if (enemyDead) {
+        enemy.element.remove();
         this.enemies.splice(eIndex, 1);
         this.score += enemy.isBoss ? 100 : 10;
       }
@@ -620,6 +613,7 @@ const game = {
     for (let eIndex = this.enemies.length - 1; eIndex >= 0; eIndex--) {
       const enemy = this.enemies[eIndex];
       if (!enemy.isBoss) {
+        enemy.element.remove();
         this.enemies.splice(eIndex, 1);
         this.score += 10 * this.getScoreMultiplier();
       }
@@ -629,30 +623,16 @@ const game = {
   fireLaserBeam(enemy) {
     this.addAnnouncement(`${enemy.name} fires a laser beam!`);
     console.log("Laser Beam fired!");
-    const laserBeam = {
-      x: enemy.x,
-      y: enemy.y,
-      width: 10,
-      height: this.canvas.height,
-      damage: 30,
-      duration: 2000, // 2 seconds
-    };
+    const laserBeam = document.createElement("div");
+    laserBeam.className = "laser-beam";
+    laserBeam.style.left = `${enemy.x}px`;
+    laserBeam.style.top = `${enemy.y}px`;
+    laserBeam.style.height = `${this.container.offsetHeight}px`;
+    this.container.appendChild(laserBeam);
 
-    // Render laser beam
-    const renderLaser = () => {
-      this.ctx.fillStyle = "rgba(255, 0, 0, 0.7)";
-      this.ctx.fillRect(
-        laserBeam.x - laserBeam.width / 2,
-        laserBeam.y,
-        laserBeam.width,
-        laserBeam.height
-      );
-    };
-
-    // Check collision with player
     const checkLaserCollision = () => {
       if (this.isColliding(this.player, laserBeam)) {
-        const playerDead = this.player.takeDamage(laserBeam.damage);
+        const playerDead = this.player.takeDamage(30);
         if (playerDead) {
           this.gameOver();
         } else {
@@ -661,77 +641,56 @@ const game = {
       }
     };
 
-    // Animate laser beam
-    const laserInterval = setInterval(() => {
-      renderLaser();
-      checkLaserCollision();
-    }, 16); // 60 FPS
+    const laserInterval = setInterval(checkLaserCollision, 16);
 
-    // Stop laser after duration
     setTimeout(() => {
       clearInterval(laserInterval);
-    }, laserBeam.duration);
+      laserBeam.remove();
+    }, 2000);
   },
 
   createBlackHole(enemy) {
     this.addAnnouncement(`${enemy.name} creates a black hole!`);
     console.log("Black Hole created!");
-    const blackHole = {
-      x: enemy.x,
-      y: enemy.y + enemy.height / 2,
-      radius: 30,
-      pullForce: 0.5,
-      duration: 5000, // 5 seconds
-    };
+    const blackHole = document.createElement("div");
+    blackHole.className = "black-hole";
+    blackHole.style.left = `${enemy.x}px`;
+    blackHole.style.top = `${enemy.y + enemy.height / 2}px`;
+    this.container.appendChild(blackHole);
 
-    // Render black hole
-    const renderBlackHole = () => {
-      this.ctx.beginPath();
-      this.ctx.arc(blackHole.x, blackHole.y, blackHole.radius, 0, Math.PI * 2);
-      this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      this.ctx.fill();
-    };
-
-    // Pull player towards black hole
     const pullPlayer = () => {
-      const dx = blackHole.x - this.player.x;
-      const dy = blackHole.y - this.player.y;
+      const dx = enemy.x - this.player.x;
+      const dy = enemy.y + enemy.height / 2 - this.player.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > 5) {
-        this.player.x += (dx / distance) * blackHole.pullForce;
-        this.player.y += (dy / distance) * blackHole.pullForce;
+        this.player.x += (dx / distance) * 0.5;
+        this.player.y += (dy / distance) * 0.5;
+        this.player.element.style.left = `${this.player.x}px`;
+        this.player.element.style.top = `${this.player.y}px`;
       }
     };
 
-    // Animate black hole
-    const blackHoleInterval = setInterval(() => {
-      renderBlackHole();
-      pullPlayer();
-    }, 16); // 60 FPS
+    const blackHoleInterval = setInterval(pullPlayer, 16);
 
-    // Stop black hole after duration
     setTimeout(() => {
       clearInterval(blackHoleInterval);
-    }, blackHole.duration);
+      blackHole.remove();
+    }, 5000);
   },
 
   activateMindControl() {
     console.log("Mind Control activated!");
     this.isMindControlled = true;
+    this.addAnnouncement("Mind Control activated!");
 
-    // Visual effect for mind control
-    const mindControlEffect = () => {
-      this.addAnnouncement("Mind Control activated!");
-      this.ctx.fillStyle = "rgba(255, 0, 255, 0.2)";
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    };
-
-    const mindControlInterval = setInterval(mindControlEffect, 16); // 60 FPS
+    const mindControlOverlay = document.createElement("div");
+    mindControlOverlay.className = "mind-control-overlay";
+    this.container.appendChild(mindControlOverlay);
 
     setTimeout(() => {
       this.isMindControlled = false;
-      clearInterval(mindControlInterval);
+      mindControlOverlay.remove();
     }, 5000);
   },
 
@@ -740,20 +699,15 @@ const game = {
     console.log("EMP activated!");
     this.isEMPDissed = true;
 
-    // Visual effect for EMP
-    const empEffect = () => {
-      this.ctx.strokeStyle = "rgba(0, 255, 255, 0.5)";
-      this.ctx.lineWidth = 2;
-      this.ctx.beginPath();
-      this.ctx.arc(this.player.x, this.player.y, 100, 0, Math.PI * 2);
-      this.ctx.stroke();
-    };
-
-    const empInterval = setInterval(empEffect, 16); // 60 FPS
+    const empEffect = document.createElement("div");
+    empEffect.className = "emp-effect";
+    empEffect.style.left = `${this.player.x}px`;
+    empEffect.style.top = `${this.player.y}px`;
+    this.container.appendChild(empEffect);
 
     setTimeout(() => {
       this.isEMPDissed = false;
-      clearInterval(empInterval);
+      empEffect.remove();
     }, 10000);
   },
 
@@ -778,14 +732,11 @@ const game = {
         const angle = Math.atan2(dy, dx);
         this.x += Math.cos(angle) * this.speed;
         this.y += Math.sin(angle) * this.speed;
-      };
-      missile.render = function (ctx) {
-        ctx.fillStyle = "orange";
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
-        ctx.fill();
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
       };
       this.enemyProjectiles.push(missile);
+      this.container.appendChild(missile.element);
     }
   },
 
@@ -809,5 +760,4 @@ const game = {
   },
 };
 
-// Start the game after the window loads
 window.addEventListener("load", () => game.init());

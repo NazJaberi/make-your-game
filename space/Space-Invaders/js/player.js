@@ -28,84 +28,63 @@ class BasePlayer {
     this.spreadShotActive = false;
     this.piercingShotActive = false;
     this.sidekick = null;
+
+    // Create DOM element
+    this.element = document.createElement("div");
+    this.element.className = "player";
+    this.element.style.width = `${this.width}px`;
+    this.element.style.height = `${this.height}px`;
+    this.element.style.position = "absolute";
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
+    this.element.style.backgroundSize = "contain";
+    this.element.style.backgroundRepeat = "no-repeat";
+    this.element.style.backgroundPosition = "center";
+
+    // Create health bar
+    this.healthBar = document.createElement("div");
+    this.healthBar.className = "health-bar";
+    this.healthBar.style.position = "absolute";
+    this.healthBar.style.bottom = "-10px";
+    this.healthBar.style.left = "0";
+    this.healthBar.style.width = "100%";
+    this.healthBar.style.height = "5px";
+    this.healthBar.style.backgroundColor = "green";
+    this.element.appendChild(this.healthBar);
   }
 
-  render(ctx) {
+  render() {
     if (this.game.assets[this.constructor.name.toLowerCase()]) {
-      ctx.drawImage(
-        this.game.assets[this.constructor.name.toLowerCase()],
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
+      this.element.style.backgroundImage = `url(${
+        this.game.assets[this.constructor.name.toLowerCase()].src
+      })`;
     } else {
-      // Fallback to rectangle if image is not available
-      ctx.fillStyle = this.color;
-      ctx.fillRect(
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
+      this.element.style.backgroundColor = this.color;
     }
 
-    this.drawIndicators(ctx);
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
+
+    this.healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
+
+    this.updateIndicators();
   }
 
-  drawIndicators(ctx) {
-    // Draw health bar
-    ctx.fillStyle = "green";
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y + this.height / 2 + 5,
-      (this.width * this.health) / this.maxHealth,
-      5
-    );
-
-    // Draw special ability indicator if active
-    if (this.isSpecialActive) {
-      ctx.strokeStyle = "yellow";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        this.x - this.width / 2 - 5,
-        this.y - this.height / 2 - 5,
-        this.width + 10,
-        this.height + 10
-      );
-    }
-
-    // Draw shield bubble
-    if (this.shieldCharges > 0) {
-      ctx.strokeStyle = "rgba(0, 0, 255, 0.5)";
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // Draw invulnerability indicator
-    if (this.isInvulnerable) {
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        this.x - this.width / 2 - 5,
-        this.y - this.height / 2 - 5,
-        this.width + 10,
-        this.height + 10
-      );
-    }
+  updateIndicators() {
+    this.element.classList.toggle("special-active", this.isSpecialActive);
+    this.element.classList.toggle("shield-active", this.shieldCharges > 0);
+    this.element.classList.toggle("invulnerable", this.isInvulnerable);
   }
 
   move(dx) {
     if (this.game.isMindControlled) dx = -dx; // Reverse controls
     this.x += dx * this.speed;
 
-    // Keep player within canvas boundaries
+    // Keep player within game container boundaries
     if (this.x - this.width / 2 < 0) {
       this.x = this.width / 2;
-    } else if (this.x + this.width / 2 > this.game.canvas.width) {
-      this.x = this.game.canvas.width - this.width / 2;
+    } else if (this.x + this.width / 2 > this.game.container.offsetWidth) {
+      this.x = this.game.container.offsetWidth - this.width / 2;
     }
   }
 
@@ -123,6 +102,8 @@ class BasePlayer {
     if (this.sidekick) {
       this.sidekick.update(currentTime);
     }
+
+    this.render();
   }
 
   shoot(currentTime) {
@@ -185,11 +166,12 @@ class BasePlayer {
     }
     const actualDamage = amount * (1 - this.defense / 100);
     this.health -= actualDamage;
+    this.render(); // Update health bar
     return this.health <= 0;
   }
 
   useSpecialAbility(currentTime) {
-    if (this.isEMPDissed) {
+    if (this.game.isEMPDissed) {
       console.log("Special ability disabled by EMP!");
       return false;
     }
@@ -199,6 +181,7 @@ class BasePlayer {
       const duration = this.specialAbility();
       setTimeout(() => {
         this.isSpecialActive = false;
+        this.render();
       }, duration);
       return true;
     }
@@ -240,16 +223,17 @@ class Speedster extends BasePlayer {
     console.log("Dodge Roll used!");
     const direction = Math.random() > 0.5 ? 1 : -1;
     this.x += this.speed * 30 * direction; // Quick dodge left or right
-    // Keep player within canvas boundaries
+    // Keep player within game container boundaries
     if (this.x - this.width / 2 < 0) {
       this.x = this.width / 2;
-    } else if (this.x + this.width / 2 > this.game.canvas.width) {
-      this.x = this.game.canvas.width - this.width / 2;
+    } else if (this.x + this.width / 2 > this.game.container.offsetWidth) {
+      this.x = this.game.container.offsetWidth - this.width / 2;
     }
 
     this.isInvulnerable = true;
     setTimeout(() => {
       this.isInvulnerable = false;
+      this.render();
     }, 500); // Invulnerability duration
     return 500; // Duration of the special ability effect
   }
@@ -273,8 +257,10 @@ class Tank extends BasePlayer {
   fortify() {
     this.fortifyActive = true;
     console.log("Fortify activated!");
+    this.element.classList.add("fortify");
     setTimeout(() => {
       this.fortifyActive = false;
+      this.element.classList.remove("fortify");
     }, 10000);
     return 10000; // Duration of fortify effect
   }
@@ -290,6 +276,7 @@ class Tank extends BasePlayer {
     const fortifyReduction = this.fortifyActive ? 0.25 : 0;
     const actualDamage = amount * (1 - this.defense / 100 - fortifyReduction);
     this.health -= actualDamage;
+    this.render(); // Update health bar
     return this.health <= 0;
   }
 }
@@ -312,8 +299,10 @@ class GlassCannon extends BasePlayer {
   powerSurge() {
     this.powerSurgeActive = true;
     console.log("Power Surge activated!");
+    this.element.classList.add("power-surge");
     setTimeout(() => {
       this.powerSurgeActive = false;
+      this.element.classList.remove("power-surge");
     }, 5000);
     return 5000; // Duration of power surge effect
   }
@@ -375,6 +364,9 @@ class Sidekick extends BasePlayer {
     this.offsetX = 70;
     this.offsetY = -30;
     this.angle = 0;
+
+    this.element.style.width = `${this.width}px`;
+    this.element.style.height = `${this.height}px`;
   }
 
   update(currentTime) {
@@ -388,12 +380,14 @@ class Sidekick extends BasePlayer {
     // Ensure the sidekick stays within the game boundaries
     this.x = Math.max(
       this.width / 2,
-      Math.min(this.x, this.game.canvas.width - this.width / 2)
+      Math.min(this.x, this.game.container.offsetWidth - this.width / 2)
     );
     this.y = Math.max(
       this.height / 2,
-      Math.min(this.y, this.game.canvas.height - this.height / 2)
+      Math.min(this.y, this.game.container.offsetHeight - this.height / 2)
     );
+
+    this.render();
   }
 
   shoot(currentTime) {
@@ -401,25 +395,10 @@ class Sidekick extends BasePlayer {
     return null;
   }
 
-  render(ctx) {
+  render() {
+    super.render();
     if (this.game && this.game.assets && this.game.assets.sidekick) {
-      ctx.drawImage(
-        this.game.assets.sidekick,
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
-    } else {
-      // Fallback to simple rectangle if image is not available
-      ctx.fillStyle = this.color;
-      ctx.fillRect(
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
+      this.element.style.backgroundImage = `url(${this.game.assets.sidekick.src})`;
     }
-    this.drawIndicators(ctx);
   }
 }

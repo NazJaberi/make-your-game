@@ -17,6 +17,27 @@ class BaseEnemy {
     this.lastShotTime = 0;
     this.fireRate = stats.fireRate || 0.5; // Default enemy fire rate
     this.imageKey = stats.imageKey || null; // Key to access the image in game.assets
+
+    // Create DOM element
+    this.element = document.createElement("div");
+    this.element.className = "enemy";
+    this.element.style.position = "absolute";
+    this.element.style.width = `${this.width}px`;
+    this.element.style.height = `${this.height}px`;
+    this.element.style.backgroundSize = "contain";
+    this.element.style.backgroundRepeat = "no-repeat";
+    this.element.style.backgroundPosition = "center";
+
+    // Create health bar
+    this.healthBar = document.createElement("div");
+    this.healthBar.className = "enemy-health-bar";
+    this.healthBar.style.position = "absolute";
+    this.healthBar.style.top = "-10px";
+    this.healthBar.style.left = "0";
+    this.healthBar.style.width = "100%";
+    this.healthBar.style.height = "5px";
+    this.healthBar.style.backgroundColor = "red";
+    this.element.appendChild(this.healthBar);
   }
 
   takeDamage(amount) {
@@ -24,50 +45,26 @@ class BaseEnemy {
       return false;
     }
     this.health -= amount;
+    this.updateHealthBar();
     return this.health <= 0;
   }
 
-  render(ctx) {
+  updateHealthBar() {
+    this.healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
+  }
+
+  render() {
     if (this.game.assets[this.imageKey]) {
-      // If an image is available, draw the image
-      ctx.drawImage(
-        this.game.assets[this.imageKey],
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
+      this.element.style.backgroundImage = `url(${
+        this.game.assets[this.imageKey].src
+      })`;
     } else {
-      // Fallback to rectangle if image is not available
-      ctx.fillStyle = this.color;
-      ctx.fillRect(
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
+      this.element.style.backgroundColor = this.color;
     }
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
 
-    // Draw health bar
-    ctx.fillStyle = "red";
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2 - 10,
-      (this.width * this.health) / this.maxHealth,
-      5
-    );
-
-    // Draw invulnerability indicator
-    if (this.isInvulnerable) {
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(
-        this.x - this.width / 2 - 2,
-        this.y - this.height / 2 - 2,
-        this.width + 4,
-        this.height + 4
-      );
-    }
+    this.element.classList.toggle("invulnerable", this.isInvulnerable);
   }
 
   move() {
@@ -90,6 +87,7 @@ class BaseEnemy {
         this.game.enemyProjectiles.push(proj);
       }
     }
+    this.render();
   }
 }
 
@@ -143,8 +141,7 @@ class ArmoredSaucer extends BaseEnemy {
 
   takeDamage(amount) {
     // Reduces damage by half (simulate armor)
-    this.health -= amount / 2;
-    return this.health <= 0;
+    return super.takeDamage(amount / 2);
   }
 }
 
@@ -178,6 +175,12 @@ class ShieldedOrb extends BaseEnemy {
     this.shieldCooldown = 5000; // Every 5 seconds
     this.isShielded = false;
     this.lastShieldTime = 0;
+
+    // Create shield element
+    this.shieldElement = document.createElement("div");
+    this.shieldElement.className = "enemy-shield";
+    this.shieldElement.style.display = "none";
+    this.element.appendChild(this.shieldElement);
   }
 
   update(currentTime) {
@@ -189,21 +192,12 @@ class ShieldedOrb extends BaseEnemy {
       this.isShielded = true;
       this.isInvulnerable = true;
       this.lastShieldTime = currentTime;
+      this.shieldElement.style.display = "block";
       setTimeout(() => {
         this.isShielded = false;
         this.isInvulnerable = false;
+        this.shieldElement.style.display = "none";
       }, this.shieldDuration);
-    }
-  }
-
-  render(ctx) {
-    super.render(ctx);
-    if (this.isShielded) {
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.width / 2 + 5, 0, Math.PI * 2);
-      ctx.stroke();
     }
   }
 }
@@ -215,14 +209,12 @@ class BossEnemy extends BaseEnemy {
     this.isBoss = true;
     this.imageKey = stats.imageKey || null;
     this.name = stats.name || "Boss";
-  }
 
-  render(ctx) {
-    super.render(ctx);
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(this.name, this.x, this.y - this.height / 2 - 10);
+    // Create name label
+    this.nameLabel = document.createElement("div");
+    this.nameLabel.className = "boss-name";
+    this.nameLabel.textContent = this.name;
+    this.element.appendChild(this.nameLabel);
   }
 }
 
@@ -289,7 +281,7 @@ class QuantumShifter extends BossEnemy {
 
     // Teleport
     if (currentTime - this.lastTeleportTime >= this.teleportInterval) {
-      this.x = Math.random() * this.game.canvas.width;
+      this.x = Math.random() * this.game.container.offsetWidth;
       this.lastTeleportTime = currentTime;
     }
 
@@ -326,7 +318,10 @@ class HiveMind extends BossEnemy {
     if (currentTime - this.lastSwarmTime >= this.swarmInterval) {
       for (let i = 0; i < 5; i++) {
         this.game.addEnemy(
-          new SpeedyZapper(Math.random() * this.game.canvas.width, this.y)
+          new SpeedyZapper(
+            Math.random() * this.game.container.offsetWidth,
+            this.y
+          )
         );
       }
       this.lastSwarmTime = currentTime;
@@ -358,13 +353,24 @@ class TechnoTitan extends BossEnemy {
     ];
     this.lastEMPTime = 0;
     this.EMPInterval = 30000; // 30 seconds
+
+    // Create weak point elements
+    this.weakPointElements = this.weakPoints.map((wp, index) => {
+      const wpElement = document.createElement("div");
+      wpElement.className = "weak-point";
+      wpElement.style.position = "absolute";
+      wpElement.style.width = `${wp.width}px`;
+      wpElement.style.height = `${wp.height}px`;
+      wpElement.style.backgroundColor = "red";
+      this.element.appendChild(wpElement);
+      return wpElement;
+    });
   }
 
   takeDamage(amount) {
     // Can only be damaged if weak points are destroyed
     if (this.weakPoints.every((wp) => wp.destroyed)) {
-      super.takeDamage(amount);
-      return this.health <= 0;
+      return super.takeDamage(amount);
     }
     return false;
   }
@@ -377,21 +383,17 @@ class TechnoTitan extends BossEnemy {
       this.game.activateEMP();
       this.lastEMPTime = currentTime;
     }
-  }
 
-  render(ctx) {
-    super.render(ctx);
-
-    // Draw weak points
-    ctx.fillStyle = "red";
-    this.weakPoints.forEach((wp) => {
+    // Update weak point positions
+    this.weakPoints.forEach((wp, index) => {
+      wp.x = this.x + (index === 0 ? -30 : 30);
+      wp.y = this.y;
       if (!wp.destroyed) {
-        ctx.fillRect(
-          wp.x - wp.width / 2,
-          wp.y - wp.height / 2,
-          wp.width,
-          wp.height
-        );
+        this.weakPointElements[index].style.display = "block";
+        this.weakPointElements[index].style.left = `${wp.x - wp.width / 2}px`;
+        this.weakPointElements[index].style.top = `${wp.y - wp.height / 2}px`;
+      } else {
+        this.weakPointElements[index].style.display = "none";
       }
     });
   }
@@ -421,6 +423,7 @@ class CosmicHydra extends BossEnemy {
     // Regenerate Health
     if (currentTime - this.lastRegenTime >= this.regenInterval) {
       this.health = Math.min(this.health + 20, this.maxHealth);
+      this.updateHealthBar();
       this.lastRegenTime = currentTime;
     }
 
