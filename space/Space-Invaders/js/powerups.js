@@ -185,7 +185,7 @@ class SidekickPowerUp extends PowerUp {
   constructor(x, y, player, game) {
     super(x, y);
     this.type = "Sidekick";
-    this.duration = 30000;
+    this.duration = 3000;
     this.player = player;
     this.game = game;
     this.element.classList.add("sidekick");

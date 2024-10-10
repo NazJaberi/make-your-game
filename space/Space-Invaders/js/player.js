@@ -53,6 +53,23 @@ class BasePlayer {
     this.element.appendChild(this.healthBar);
   }
 
+  // render() {
+  //   if (this.game.assets[this.constructor.name.toLowerCase()]) {
+  //     this.element.style.backgroundImage = `url(${
+  //       this.game.assets[this.constructor.name.toLowerCase()].src
+  //     })`;
+  //   } else {
+  //     this.element.style.backgroundColor = this.color;
+  //   }
+
+  //   this.element.style.left = `${this.x - this.width / 2}px`;
+  //   this.element.style.top = `${this.y - this.height / 2}px`;
+
+  //   this.healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
+
+  //   this.updateIndicators();
+  // }
+
   render() {
     if (this.game.assets[this.constructor.name.toLowerCase()]) {
       this.element.style.backgroundImage = `url(${
@@ -61,14 +78,16 @@ class BasePlayer {
     } else {
       this.element.style.backgroundColor = this.color;
     }
-
+  
+    // Update the position of the player element
     this.element.style.left = `${this.x - this.width / 2}px`;
     this.element.style.top = `${this.y - this.height / 2}px`;
-
+  
     this.healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
-
+  
     this.updateIndicators();
   }
+  
 
   updateIndicators() {
     this.element.classList.toggle("special-active", this.isSpecialActive);
@@ -106,23 +125,73 @@ class BasePlayer {
     this.render();
   }
 
+  // shoot(currentTime) {
+  //   if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
+  //     this.lastShotTime = currentTime;
+
+  //     const projectiles = [];
+
+  //     if (this.spreadShotActive) {
+  //       // Fire three projectiles in a spread pattern
+  //       const angles = [-0.1, 0, 0.1];
+  //       angles.forEach((angle) => {
+  //         const proj = new Projectile(
+  //           this.x,
+  //           this.y - this.height / 2,
+  //           this.damage,
+  //           angle,
+  //           this.piercingShotActive,
+  //           this.game.comboLevel >= 5 // Splash damage at combo level 5
+  //         );
+  //         projectiles.push(proj);
+  //       });
+  //     } else {
+  //       // Single projectile
+  //       const proj = new Projectile(
+  //         this.x,
+  //         this.y - this.height / 2,
+  //         this.damage,
+  //         0,
+  //         this.piercingShotActive,
+  //         this.game.comboLevel >= 5 // Splash damage at combo level 5
+  //       );
+  //       projectiles.push(proj);
+  //     }
+
+  //     // Sidekick fires
+  //     if (this.sidekick) {
+  //       const proj = new Projectile(
+  //         this.sidekick.x,
+  //         this.sidekick.y - this.sidekick.height / 2,
+  //         this.damage / 2,
+  //         0,
+  //         this.piercingShotActive
+  //       );
+  //       projectiles.push(proj);
+  //     }
+
+  //     return projectiles;
+  //   }
+  //   return null;
+  // }
+
   shoot(currentTime) {
     if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
       this.lastShotTime = currentTime;
-
+  
       const projectiles = [];
-
+  
       if (this.spreadShotActive) {
         // Fire three projectiles in a spread pattern
         const angles = [-0.1, 0, 0.1];
         angles.forEach((angle) => {
           const proj = new Projectile(
             this.x,
-            this.y - this.height / 2,
+            this.y,  // Changed from this.y - this.height / 2
             this.damage,
             angle,
             this.piercingShotActive,
-            this.game.comboLevel >= 5 // Splash damage at combo level 5
+            this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
           );
           projectiles.push(proj);
         });
@@ -130,27 +199,27 @@ class BasePlayer {
         // Single projectile
         const proj = new Projectile(
           this.x,
-          this.y - this.height / 2,
+          this.y,  // Changed from this.y - this.height / 2
           this.damage,
           0,
           this.piercingShotActive,
-          this.game.comboLevel >= 5 // Splash damage at combo level 5
+          this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
         );
         projectiles.push(proj);
       }
-
+  
       // Sidekick fires
       if (this.sidekick) {
         const proj = new Projectile(
           this.sidekick.x,
-          this.sidekick.y - this.sidekick.height / 2,
+          this.sidekick.y,  // Changed from this.sidekick.y - this.sidekick.height / 2
           this.damage / 2,
           0,
           this.piercingShotActive
         );
         projectiles.push(proj);
       }
-
+  
       return projectiles;
     }
     return null;

@@ -331,24 +331,67 @@ const game = {
     this.entities = [];
     this.comboSystem = new ComboSystem(this);
     this.startTime = performance.now();
-
+  
+    // Clear the game container
+    while (this.container.firstChild) {
+      this.container.removeChild(this.container.firstChild);
+    }
+  
     const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
     this.player = new PlayerClass(
       this.container.offsetWidth / 2,
-      this.container.offsetHeight - 100
+      this.container.offsetHeight - 50  // Adjusted to position player closer to bottom
     );
     this.player.game = this;
     this.entities.push(this.player);
     this.container.appendChild(this.player.element);
-
+  
+    // Ensure the player is rendered correctly
+    this.player.render();
+  
     this.lastEnemySpawnTime = 0;
     this.lastBossSpawnTime = 0;
     this.lastPowerUpSpawnTime = 0;
-
+  
     this.isMindControlled = false;
     this.isEMPDissed = false;
     this.timeWarpActive = false;
+  
+    // Reset HUD
+    this.updateHUD();
   },
+
+  // startGame() {
+  //   console.log("Starting game");
+  //   this.isRunning = true;
+  //   this.isPaused = false;
+  //   this.menuManager.hideMenu();
+  //   this.score = 0;
+  //   this.enemies = [];
+  //   this.projectiles = [];
+  //   this.enemyProjectiles = [];
+  //   this.powerUps = [];
+  //   this.entities = [];
+  //   this.comboSystem = new ComboSystem(this);
+  //   this.startTime = performance.now();
+
+  //   const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
+  //   this.player = new PlayerClass(
+  //     this.container.offsetWidth / 2,
+  //     this.container.offsetHeight - 100
+  //   );
+  //   this.player.game = this;
+  //   this.entities.push(this.player);
+  //   this.container.appendChild(this.player.element);
+
+  //   this.lastEnemySpawnTime = 0;
+  //   this.lastBossSpawnTime = 0;
+  //   this.lastPowerUpSpawnTime = 0;
+
+  //   this.isMindControlled = false;
+  //   this.isEMPDissed = false;
+  //   this.timeWarpActive = false;
+  // },
 
   togglePause() {
     if (this.isRunning) {
@@ -375,6 +418,22 @@ const game = {
   gameOver() {
     this.isRunning = false;
     this.addAnnouncement("Game Over", 5000);
+    
+    // Clear all game objects
+    this.enemies.forEach(enemy => enemy.element.remove());
+    this.projectiles.forEach(proj => proj.element.remove());
+    this.enemyProjectiles.forEach(proj => proj.element.remove());
+    this.powerUps.forEach(powerUp => powerUp.element.remove());
+    this.entities.forEach(entity => {
+      if (entity == this.player) entity.element.remove();
+    });
+    
+    this.enemies = [];
+    this.projectiles = [];
+    this.enemyProjectiles = [];
+    this.powerUps = [];
+    this.entities = [this.player];
+  
     this.menuManager.showMenu("gameOver");
     console.log("Game over");
   },
