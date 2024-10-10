@@ -33,46 +33,55 @@ const game = {
     this.container = document.getElementById("game-container");
     this.container.style.width = `${window.innerWidth}px`;
     this.container.style.height = `${window.innerHeight}px`;
-
+  
     this.menuManager = new MenuManager(this);
-    this.container.addEventListener(
-      "mousemove",
-      this.handleMouseMove.bind(this)
-    );
+    this.container.addEventListener("mousemove", this.handleMouseMove.bind(this));
     this.menuManager.showMenu("main");
-
+  
     this.enemies = [];
     this.projectiles = [];
     this.enemyProjectiles = [];
     this.powerUps = [];
     this.entities = [];
-
+  
     this.isRunning = false;
     this.isPaused = false;
     this.score = 0;
     this.comboSystem = new ComboSystem(this);
-
+  
     this.startTime = 0;
-
+  
     this.container.addEventListener("click", this.handleClick.bind(this));
     window.addEventListener("keydown", this.handleKeyDown.bind(this));
     window.addEventListener("keyup", this.handleKeyUp.bind(this));
-
+    window.addEventListener("resize", this.handleResize.bind(this));
+  
     this.isLeftPressed = false;
     this.isRightPressed = false;
     this.isSpacePressed = false;
     this.isShiftPressed = false;
-
+  
     this.loadAssets(() => {
       this.gameLoop();
     });
-
+  
     console.log(
       "Game initialized. Container size:",
       this.container.offsetWidth,
       "x",
       this.container.offsetHeight
     );
+  },
+  
+  handleResize() {
+    this.container.style.width = `${window.innerWidth}px`;
+    this.container.style.height = `${window.innerHeight}px`;
+    if (this.player) {
+      const maxX = this.container.offsetWidth - this.player.width / 2;
+      const minX = this.player.width / 2;
+      this.player.x = Math.max(minX, Math.min(this.player.x, maxX));
+      this.player.updatePosition();
+    }
   },
 
   handleMouseMove(event) {
@@ -246,19 +255,18 @@ const game = {
   },
 
   updateHUD() {
-    document.getElementById("score").textContent = `Score: ${this.score}`;
-    document.getElementById("health").textContent = `Health: ${Math.max(
-      0,
-      Math.floor(this.player.health)
-    )}`;
-
-    const cooldownPercentage = this.player.getSpecialCooldownPercentage(
-      performance.now()
-    );
+    const scoreElement = document.getElementById("score");
+    const healthElement = document.getElementById("health");
     const specialCooldown = document.getElementById("special-cooldown");
-    specialCooldown.style.width = `${cooldownPercentage * 100}%`;
-    specialCooldown.style.backgroundColor =
-      cooldownPercentage === 1 ? "green" : "red";
+  
+    if (scoreElement) scoreElement.textContent = `Score: ${this.score}`;
+    if (healthElement) healthElement.textContent = `Health: ${Math.max(0, Math.floor(this.player.health))}`;
+  
+    if (specialCooldown && this.player) {
+      const cooldownPercentage = this.player.getSpecialCooldownPercentage(performance.now());
+      specialCooldown.style.width = `${cooldownPercentage * 100}%`;
+      specialCooldown.style.backgroundColor = cooldownPercentage === 1 ? "green" : "red";
+    }
   },
 
   addAnnouncement(message, duration = 3000) {
@@ -336,6 +344,18 @@ const game = {
     while (this.container.firstChild) {
       this.container.removeChild(this.container.firstChild);
     }
+
+
+  // Create HUD
+  const hud = document.createElement('div');
+  hud.id = 'hud';
+  hud.innerHTML = `
+    <div id="score">Score: 0</div>
+    <div id="health">Health: 100</div>
+    <div id="special-cooldown"></div>
+  `;
+  this.container.appendChild(hud);
+
   
     const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
     this.player = new PlayerClass(

@@ -1,5 +1,3 @@
-// projectiles.js
-
 class Projectile {
   constructor(x, y, damage, angle = 0, piercing = false, splash = false) {
     this.x = x;
@@ -18,19 +16,20 @@ class Projectile {
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
     this.element.style.backgroundColor = this.piercing ? "lime" : "white";
-    this.render();
+    this.element.style.transform = "translate(-50%, -50%)"; // Center the projectile element
+    this.updatePosition();
   }
 
-  render() {
-    this.element.style.left = `${this.x - this.width / 2}px`;
-    this.element.style.top = `${this.y - this.height / 2}px`;
-    this.element.style.transform = `rotate(${this.angle}rad)`;
+  updatePosition() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
+    this.element.style.transform = `translate(-50%, -50%) rotate(${this.angle}rad)`;
   }
 
   move() {
     this.x += Math.sin(this.angle) * this.speed;
     this.y -= Math.cos(this.angle) * this.speed;
-    this.render();
+    this.updatePosition();
   }
 }
 
@@ -50,17 +49,18 @@ class EnemyProjectile {
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
     this.element.style.backgroundColor = "red";
-    this.render();
+    this.element.style.transform = "translate(-50%, -50%)"; // Center the projectile element
+    this.updatePosition();
   }
 
-  render() {
-    this.element.style.left = `${this.x - this.width / 2}px`;
-    this.element.style.top = `${this.y - this.height / 2}px`;
+  updatePosition() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
   }
 
   move() {
     this.y += this.speed * (this.game.timeWarpActive ? 0.5 : 1);
-    this.render();
+    this.updatePosition();
   }
 }
 

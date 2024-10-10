@@ -31,15 +31,15 @@ class BasePlayer {
 
     // Create DOM element
     this.element = document.createElement("div");
-    this.element.className = "player";
+    this.element.className = "player game-object";
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
     this.element.style.position = "absolute";
-    this.element.style.left = `${this.x - this.width / 2}px`;
-    this.element.style.top = `${this.y - this.height / 2}px`;
     this.element.style.backgroundSize = "contain";
     this.element.style.backgroundRepeat = "no-repeat";
     this.element.style.backgroundPosition = "center";
+    this.element.style.transform = "translate(-50%, -50%)"; // Center the player element
+
 
     // Create health bar
     this.healthBar = document.createElement("div");
@@ -51,43 +51,26 @@ class BasePlayer {
     this.healthBar.style.height = "5px";
     this.healthBar.style.backgroundColor = "green";
     this.element.appendChild(this.healthBar);
+
+    this.updatePosition();
   }
 
-  // render() {
-  //   if (this.game.assets[this.constructor.name.toLowerCase()]) {
-  //     this.element.style.backgroundImage = `url(${
-  //       this.game.assets[this.constructor.name.toLowerCase()].src
-  //     })`;
-  //   } else {
-  //     this.element.style.backgroundColor = this.color;
-  //   }
-
-  //   this.element.style.left = `${this.x - this.width / 2}px`;
-  //   this.element.style.top = `${this.y - this.height / 2}px`;
-
-  //   this.healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
-
-  //   this.updateIndicators();
-  // }
+  updatePosition() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
+  }
 
   render() {
     if (this.game.assets[this.constructor.name.toLowerCase()]) {
-      this.element.style.backgroundImage = `url(${
-        this.game.assets[this.constructor.name.toLowerCase()].src
-      })`;
+      this.element.style.backgroundImage = `url(${this.game.assets[this.constructor.name.toLowerCase()].src})`;
     } else {
       this.element.style.backgroundColor = this.color;
     }
-  
-    // Update the position of the player element
-    this.element.style.left = `${this.x - this.width / 2}px`;
-    this.element.style.top = `${this.y - this.height / 2}px`;
-  
+
+    this.updatePosition();
     this.healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
-  
     this.updateIndicators();
   }
-  
 
   updateIndicators() {
     this.element.classList.toggle("special-active", this.isSpecialActive);
@@ -100,11 +83,11 @@ class BasePlayer {
     this.x += dx * this.speed;
 
     // Keep player within game container boundaries
-    if (this.x - this.width / 2 < 0) {
-      this.x = this.width / 2;
-    } else if (this.x + this.width / 2 > this.game.container.offsetWidth) {
-      this.x = this.game.container.offsetWidth - this.width / 2;
-    }
+    const maxX = this.game.container.offsetWidth - this.width / 2;
+    const minX = this.width / 2;
+    this.x = Math.max(minX, Math.min(this.x, maxX));
+
+    this.updatePosition();
   }
 
   update(currentTime) {
@@ -125,56 +108,6 @@ class BasePlayer {
     this.render();
   }
 
-  // shoot(currentTime) {
-  //   if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
-  //     this.lastShotTime = currentTime;
-
-  //     const projectiles = [];
-
-  //     if (this.spreadShotActive) {
-  //       // Fire three projectiles in a spread pattern
-  //       const angles = [-0.1, 0, 0.1];
-  //       angles.forEach((angle) => {
-  //         const proj = new Projectile(
-  //           this.x,
-  //           this.y - this.height / 2,
-  //           this.damage,
-  //           angle,
-  //           this.piercingShotActive,
-  //           this.game.comboLevel >= 5 // Splash damage at combo level 5
-  //         );
-  //         projectiles.push(proj);
-  //       });
-  //     } else {
-  //       // Single projectile
-  //       const proj = new Projectile(
-  //         this.x,
-  //         this.y - this.height / 2,
-  //         this.damage,
-  //         0,
-  //         this.piercingShotActive,
-  //         this.game.comboLevel >= 5 // Splash damage at combo level 5
-  //       );
-  //       projectiles.push(proj);
-  //     }
-
-  //     // Sidekick fires
-  //     if (this.sidekick) {
-  //       const proj = new Projectile(
-  //         this.sidekick.x,
-  //         this.sidekick.y - this.sidekick.height / 2,
-  //         this.damage / 2,
-  //         0,
-  //         this.piercingShotActive
-  //       );
-  //       projectiles.push(proj);
-  //     }
-
-  //     return projectiles;
-  //   }
-  //   return null;
-  // }
-
   shoot(currentTime) {
     if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
       this.lastShotTime = currentTime;
@@ -187,7 +120,7 @@ class BasePlayer {
         angles.forEach((angle) => {
           const proj = new Projectile(
             this.x,
-            this.y,  // Changed from this.y - this.height / 2
+            this.y - this.height / 2, // Adjust the y position to spawn from the top of the player
             this.damage,
             angle,
             this.piercingShotActive,
@@ -199,7 +132,7 @@ class BasePlayer {
         // Single projectile
         const proj = new Projectile(
           this.x,
-          this.y,  // Changed from this.y - this.height / 2
+          this.y - this.height / 2, // Adjust the y position to spawn from the top of the player
           this.damage,
           0,
           this.piercingShotActive,
@@ -212,7 +145,7 @@ class BasePlayer {
       if (this.sidekick) {
         const proj = new Projectile(
           this.sidekick.x,
-          this.sidekick.y,  // Changed from this.sidekick.y - this.sidekick.height / 2
+          this.sidekick.y - this.sidekick.height / 2,
           this.damage / 2,
           0,
           this.piercingShotActive
@@ -293,13 +226,12 @@ class Speedster extends BasePlayer {
     const direction = Math.random() > 0.5 ? 1 : -1;
     this.x += this.speed * 30 * direction; // Quick dodge left or right
     // Keep player within game container boundaries
-    if (this.x - this.width / 2 < 0) {
-      this.x = this.width / 2;
-    } else if (this.x + this.width / 2 > this.game.container.offsetWidth) {
-      this.x = this.game.container.offsetWidth - this.width / 2;
-    }
+    const maxX = this.game.container.offsetWidth - this.width / 2;
+    const minX = this.width / 2;
+    this.x = Math.max(minX, Math.min(this.x, maxX));
 
     this.isInvulnerable = true;
+    this.updatePosition();
     setTimeout(() => {
       this.isInvulnerable = false;
       this.render();
@@ -381,11 +313,11 @@ class GlassCannon extends BasePlayer {
       this.lastShotTime = currentTime;
       const projectile = new Projectile(
         this.x,
-        this.y - this.height / 2,
+        this.y,
         this.powerSurgeActive ? this.damage * 2 : this.damage,
         0,
         this.piercingShotActive,
-        this.game.comboLevel >= 5 // Splash damage at combo level 5
+        this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
       );
       return [projectile];
     }
@@ -447,14 +379,12 @@ class Sidekick extends BasePlayer {
     this.y = this.player.y + this.offsetY + Math.sin(this.angle) * circleRadius;
 
     // Ensure the sidekick stays within the game boundaries
-    this.x = Math.max(
-      this.width / 2,
-      Math.min(this.x, this.game.container.offsetWidth - this.width / 2)
-    );
-    this.y = Math.max(
-      this.height / 2,
-      Math.min(this.y, this.game.container.offsetHeight - this.height / 2)
-    );
+    const maxX = this.game.container.offsetWidth - this.width / 2;
+    const minX = this.width / 2;
+    const maxY = this.game.container.offsetHeight - this.height / 2;
+    const minY = this.height / 2;
+    this.x = Math.max(minX, Math.min(this.x, maxX));
+    this.y = Math.max(minY, Math.min(this.y, maxY));
 
     this.render();
   }
