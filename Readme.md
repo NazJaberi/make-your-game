@@ -36,7 +36,9 @@ Improve the overall look with better sprites, backgrounds, and UI elements.
 
 Things to fix
 1. Enemy Projectiles from the side of enemy ship
-2. fix the background
+
 3. fix the sound
 4. fix the powerups spwan rate
 5. Game balances power to shoot ratio based on enemy damage and spawn rate
+
+

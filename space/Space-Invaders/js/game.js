@@ -127,6 +127,7 @@ const game = {
       const img = new Image();
       img.src = src;
       img.onload = () => {
+        console.log(`Loaded image: ${key}`); // Add this line
         assetsLoaded++;
         if (assetsLoaded >= assetsToLoad) {
           callback();
@@ -357,6 +358,13 @@ const game = {
     <div id="health">Health: 100</div>
     <div id="special-cooldown"></div>
   `;
+  // Apply background
+  this.container.style.backgroundImage = `url(${this.assets.background.src})`;
+  this.container.style.backgroundSize = 'cover';
+  this.container.style.backgroundPosition = 'center';
+  this.container.style.backgroundRepeat = 'no-repeat';
+
+
   this.container.appendChild(hud);
 
   
