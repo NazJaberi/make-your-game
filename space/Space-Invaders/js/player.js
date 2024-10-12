@@ -243,13 +243,13 @@ class Speedster extends BasePlayer {
 class Tank extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 5,
-      fireRate: 1,
-      damage: 7,
-      health: 150,
-      defense: 25,
+      speed: 25,
+      fireRate: 20,
+      damage: 70,
+      health: 250,
+      defense: 225,
       specialAbility: () => this.fortify(),
-      specialAbilityCooldown: 20,
+      specialAbilityCooldown: 10,
     });
     this.color = "blue";
     this.fortifyActive = false;

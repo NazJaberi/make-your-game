@@ -10,7 +10,7 @@ const game = {
       name: "Tank",
       class: Tank,
       color: "blue",
-      stats: { speed: 5, fireRate: 1, damage: 7, health: 150, defense: 25 },
+      stats: { speed: 25, fireRate: 10, damage: 70, health: 350, defense: 125 },
     },
     {
       name: "Glass Cannon",
@@ -140,6 +140,7 @@ const game = {
   },
 
   gameLoop(currentTime) {
+    console.log(`Game loop at ${currentTime}`);
     if (!this.lastUpdateTime) this.lastUpdateTime = currentTime;
     const deltaTime = currentTime - this.lastUpdateTime;
     this.update(currentTime, deltaTime);
@@ -204,6 +205,7 @@ const game = {
   },
 
   updateEnemyProjectiles() {
+    console.log(`Updating ${this.enemyProjectiles.length} enemy projectiles`);
     this.enemyProjectiles.forEach((proj, index) => {
       proj.move();
       if (proj.y > this.container.offsetHeight) {
@@ -238,6 +240,7 @@ const game = {
   },
 
   updateEnemies(currentTime) {
+    console.log(`Updating ${this.enemies.length} enemies at ${currentTime}`);
     this.enemies.forEach((enemy, index) => {
       enemy.update(currentTime);
       if (enemy.y > this.container.offsetHeight + 100) {
@@ -588,8 +591,9 @@ const game = {
     const elapsedMinutes = (currentTime - this.startTime) / 60000;
     let spawnInterval = Math.max(2000 - elapsedMinutes * 100, 500);
     if (!this.lastEnemySpawnTime) this.lastEnemySpawnTime = currentTime;
-
+  
     if (currentTime - this.lastEnemySpawnTime >= spawnInterval) {
+      console.log('Spawning enemy at', currentTime);
       this.addEnemy(
         new BasicDrone(Math.random() * this.container.offsetWidth, -50)
       );

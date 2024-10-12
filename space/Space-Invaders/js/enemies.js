@@ -72,10 +72,11 @@ class BaseEnemy {
   }
 
   update(currentTime) {
+    console.log(`Updating enemy at ${this.x}, ${this.y}, time: ${currentTime}`);
     this.move();
-    // Default enemy shooting
     if (this.fireRate > 0) {
       if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
+        console.log(`Enemy attempting to shoot at ${currentTime}`);
         this.lastShotTime = currentTime;
         const proj = new EnemyProjectile(
           this.x,
@@ -84,7 +85,13 @@ class BaseEnemy {
           5,
           this.game
         );
-        this.game.enemyProjectiles.push(proj);
+        if (this.game && this.game.enemyProjectiles) {
+          console.log('Adding enemy projectile to game');
+          this.game.enemyProjectiles.push(proj);
+          this.game.container.appendChild(proj.element);
+        } else {
+          console.error("Game or enemyProjectiles array not available");
+        }
       }
     }
     this.render();
