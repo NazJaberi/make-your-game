@@ -16,14 +16,13 @@ class Projectile {
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
     this.element.style.backgroundColor = this.piercing ? "lime" : "white";
-    this.element.style.transform = "translate(-50%, -50%)"; // Center the projectile element
     this.updatePosition();
   }
 
   updatePosition() {
-    this.element.style.left = `${this.x}px`;
-    this.element.style.top = `${this.y}px`;
-    this.element.style.transform = `translate(-50%, -50%) rotate(${this.angle}rad)`;
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
+    this.element.style.transform = `rotate(${this.angle}rad)`;
   }
 
   move() {
@@ -34,7 +33,7 @@ class Projectile {
 }
 
 class EnemyProjectile {
-  constructor(x, y, damage, speed = 5, game) {
+  constructor(x, y, damage, speed, game, angle = Math.PI / 2) {
     this.x = x;
     this.y = y;
     this.width = 5;
@@ -42,6 +41,7 @@ class EnemyProjectile {
     this.speed = speed;
     this.damage = damage;
     this.game = game;
+    this.angle = angle;
 
     this.element = document.createElement("div");
     this.element.className = "enemy-projectile";
@@ -49,13 +49,13 @@ class EnemyProjectile {
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
     this.element.style.backgroundColor = "red";
-    this.element.style.transform = "translate(-50%, -50%)"; // Center the projectile element
     this.updatePosition();
   }
 
   updatePosition() {
-    this.element.style.left = `${this.x}px`;
-    this.element.style.top = `${this.y}px`;
+    this.element.style.left = `${this.x - this.width / 2}px`;
+    this.element.style.top = `${this.y - this.height / 2}px`;
+    this.element.style.transform = `rotate(${this.angle}rad)`;
   }
 
   move() {
@@ -64,6 +64,4 @@ class EnemyProjectile {
   }
 }
 
-// Attach classes to the global window object
 window.Projectile = Projectile;
-window.EnemyProjectile = EnemyProjectile;

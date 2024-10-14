@@ -55,9 +55,7 @@ class BaseEnemy {
 
   render() {
     if (this.game.assets[this.imageKey]) {
-      this.element.style.backgroundImage = `url(${
-        this.game.assets[this.imageKey].src
-      })`;
+      this.element.style.backgroundImage = `url(${this.game.assets[this.imageKey].src})`;
     } else {
       this.element.style.backgroundColor = this.color;
     }
@@ -71,29 +69,35 @@ class BaseEnemy {
     this.y += this.speed * (this.game.timeWarpActive ? 0.5 : 1);
   }
 
+  shoot(currentTime) {
+    if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
+      this.lastShotTime = currentTime;
+      const projectileWidth = 5; // Assuming projectile width is 5px
+  
+      // Calculate spawn position at the right edge
+      const spawnX = this.x + (this.width / 2) + (projectileWidth / 2);
+      const spawnY = this.y + this.height / 2; // Bottom of the enemy
+  
+      // Create projectile with angle = Math.PI / 2 (straight down)
+      const proj = new EnemyProjectile(
+        spawnX,
+        spawnY,
+        this.damage,
+        5,
+        this.game,
+        Math.PI / 2
+      );
+  
+      // Add to game
+      this.game.enemyProjectiles.push(proj);
+      this.game.container.appendChild(proj.element);
+    }
+  }
+
   update(currentTime) {
     console.log(`Updating enemy at ${this.x}, ${this.y}, time: ${currentTime}`);
     this.move();
-    if (this.fireRate > 0) {
-      if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
-        console.log(`Enemy attempting to shoot at ${currentTime}`);
-        this.lastShotTime = currentTime;
-        const proj = new EnemyProjectile(
-          this.x,
-          this.y + this.height / 2,
-          this.damage,
-          5,
-          this.game
-        );
-        if (this.game && this.game.enemyProjectiles) {
-          console.log('Adding enemy projectile to game');
-          this.game.enemyProjectiles.push(proj);
-          this.game.container.appendChild(proj.element);
-        } else {
-          console.error("Game or enemyProjectiles array not available");
-        }
-      }
-    }
+    this.shoot(currentTime);
     this.render();
   }
 }
@@ -261,6 +265,30 @@ class Mothership extends BossEnemy {
     if (currentTime - this.lastLaserTime >= this.laserInterval) {
       this.game.fireLaserBeam(this);
       this.lastLaserTime = currentTime;
+    }
+  }
+
+  shoot(currentTime) {
+    if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
+      this.lastShotTime = currentTime;
+      // Shoot from both sides
+      const leftProj = new EnemyProjectile(
+        this.x - this.width / 4,
+        this.y + this.height / 2,
+        this.damage,
+        5,
+        this.game
+      );
+      const rightProj = new EnemyProjectile(
+        this.x + this.width / 4,
+        this.y + this.height / 2,
+        this.damage,
+        5,
+        this.game
+      );
+      this.game.enemyProjectiles.push(leftProj, rightProj);
+      this.game.container.appendChild(leftProj.element);
+      this.game.container.appendChild(rightProj.element);
     }
   }
 }

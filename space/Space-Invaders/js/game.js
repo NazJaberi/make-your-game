@@ -141,7 +141,7 @@ const game = {
   },
 
   gameLoop(currentTime) {
-    console.log(`Game loop at ${currentTime}`);
+  //  console.log(`Game loop at ${currentTime}`);
     if (!this.lastUpdateTime) this.lastUpdateTime = currentTime;
     const deltaTime = currentTime - this.lastUpdateTime;
     this.update(currentTime, deltaTime);
@@ -297,7 +297,9 @@ const game = {
     }
   },
 
+
   handleKeyDown(event) {
+    console.log("Key pressed:", event.key);
     if (this.isRunning && !this.isPaused) {
       if (event.key === "ArrowLeft" || event.key === "a") {
         this.isLeftPressed = true;
@@ -313,7 +315,6 @@ const game = {
       this.togglePause();
     }
   },
-
   handleKeyUp(event) {
     if (event.key === "ArrowLeft" || event.key === "a") {
       this.isLeftPressed = false;
@@ -425,14 +426,18 @@ const game = {
   // },
 
   togglePause() {
+    console.log("Toggle pause called");
     if (this.isRunning) {
       if (this.isPaused) {
         this.resumeGame();
       } else {
         this.pauseGame();
       }
+    } else {
+      console.log("Game hasn't started yet");
     }
   },
+
 
   pauseGame() {
     this.isPaused = true;
@@ -445,6 +450,7 @@ const game = {
     this.menuManager.hideMenu();
     console.log("Game resumed");
   },
+
 
   gameOver() {
     this.isRunning = false;
@@ -465,13 +471,26 @@ const game = {
     this.powerUps = [];
     this.entities = [this.player];
   
-    this.menuManager.showMenu("gameOver");
+    // Show game over menu
+    const gameOverMenu = document.getElementById('game-over-menu');
+    gameOverMenu.classList.remove('hidden');
+    
+    // Update final score
+    const finalScoreElement = document.getElementById('final-score');
+    finalScoreElement.textContent = `Final Score: ${this.score}`;
+    
+    // Add event listeners for buttons
+    document.getElementById('play-again').addEventListener('click', () => this.startGame());
+    document.getElementById('return-to-main').addEventListener('click', () => this.returnToMainMenu());
+    
     console.log("Game over");
   },
+
 
   returnToMainMenu() {
     this.isRunning = false;
     this.isPaused = false;
+    document.getElementById('game-over-menu').classList.add('hidden');
     this.menuManager.showMenu("main");
     console.log("Returned to main menu");
   },
@@ -538,8 +557,8 @@ const game = {
   checkPlayerEnemyCollisions() {
     for (let eIndex = this.enemies.length - 1; eIndex >= 0; eIndex--) {
       const enemy = this.enemies[eIndex];
-
       if (this.isColliding(enemy, this.player)) {
+        console.log("Player collided with enemy");
         enemy.element.remove();
         this.enemies.splice(eIndex, 1);
         const playerDead = this.player.takeDamage(enemy.damage);
@@ -580,13 +599,20 @@ const game = {
     }
   },
 
+
   isColliding(rect1, rect2) {
-    return !(
-      rect1.x + rect1.width < rect2.x ||
-      rect1.x > rect2.x + rect2.width ||
-      rect1.y + rect1.height < rect2.y ||
-      rect1.y > rect2.y + rect2.height
-    );
+    const rect1CenterX = rect1.x;
+    const rect1CenterY = rect1.y;
+    const rect2CenterX = rect2.x;
+    const rect2CenterY = rect2.y;
+  
+    const distanceX = Math.abs(rect1CenterX - rect2CenterX);
+    const distanceY = Math.abs(rect1CenterY - rect2CenterY);
+  
+    const sumHalfWidths = (rect1.width + rect2.width) / 2;
+    const sumHalfHeights = (rect1.height + rect2.height) / 2;
+  
+    return (distanceX < sumHalfWidths && distanceY < sumHalfHeights);
   },
 
   addEnemy(enemy) {
