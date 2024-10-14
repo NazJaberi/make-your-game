@@ -1,3 +1,5 @@
+// player.js
+
 class BasePlayer {
   constructor(x, y, stats) {
     this.game = null; // Will be set when player is created
@@ -39,7 +41,6 @@ class BasePlayer {
     this.element.style.backgroundRepeat = "no-repeat";
     this.element.style.backgroundPosition = "center";
     this.element.style.transform = "translate(-50%, -50%)"; // Center the player element
-
 
     // Create health bar
     this.healthBar = document.createElement("div");
@@ -111,9 +112,9 @@ class BasePlayer {
   shoot(currentTime) {
     if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
       this.lastShotTime = currentTime;
-  
+
       const projectiles = [];
-  
+
       if (this.spreadShotActive) {
         // Fire three projectiles in a spread pattern
         const angles = [-0.1, 0, 0.1];
@@ -140,7 +141,7 @@ class BasePlayer {
         );
         projectiles.push(proj);
       }
-  
+
       // Sidekick fires
       if (this.sidekick) {
         const proj = new Projectile(
@@ -152,7 +153,7 @@ class BasePlayer {
         );
         projectiles.push(proj);
       }
-  
+
       return projectiles;
     }
     return null;
@@ -210,13 +211,13 @@ class BasePlayer {
 class Speedster extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 15,
-      fireRate: 2,
-      damage: 3,
-      health: 60,
-      defense: 5,
+      speed: 18, // Increased speed
+      fireRate: 3, // Increased fire rate
+      damage: 5,   // Increased damage
+      health: 80,  // Increased health
+      defense: 10, // Increased defense
       specialAbility: () => this.dodgeRoll(),
-      specialAbilityCooldown: 5,
+      specialAbilityCooldown: 3, // Reduced cooldown
     });
     this.color = "yellow";
   }
@@ -235,21 +236,21 @@ class Speedster extends BasePlayer {
     setTimeout(() => {
       this.isInvulnerable = false;
       this.render();
-    }, 500); // Invulnerability duration
-    return 500; // Duration of the special ability effect
+    }, 800); // Increased invulnerability duration
+    return 800; // Duration of the special ability effect
   }
 }
 
 class Tank extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 25,
-      fireRate: 20,
-      damage: 70,
-      health: 250,
-      defense: 225,
+      speed: 15,   // Increased speed
+      fireRate: 1, // Increased fire rate
+      damage: 100, // Increased damage
+      health: 350, // Increased health
+      defense: 250, // Increased defense
       specialAbility: () => this.fortify(),
-      specialAbilityCooldown: 10,
+      specialAbilityCooldown: 8, // Reduced cooldown
     });
     this.color = "blue";
     this.fortifyActive = false;
@@ -262,8 +263,8 @@ class Tank extends BasePlayer {
     setTimeout(() => {
       this.fortifyActive = false;
       this.element.classList.remove("fortify");
-    }, 10000);
-    return 10000; // Duration of fortify effect
+    }, 12000); // Increased duration
+    return 12000; // Duration of fortify effect
   }
 
   takeDamage(amount) {
@@ -274,7 +275,7 @@ class Tank extends BasePlayer {
       this.shieldCharges--;
       return false;
     }
-    const fortifyReduction = this.fortifyActive ? 0.25 : 0;
+    const fortifyReduction = this.fortifyActive ? 0.35 : 0;
     const actualDamage = amount * (1 - this.defense / 100 - fortifyReduction);
     this.health -= actualDamage;
     this.render(); // Update health bar
@@ -285,13 +286,13 @@ class Tank extends BasePlayer {
 class GlassCannon extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 10,
-      fireRate: 3,
-      damage: 7,
-      health: 50,
-      defense: 0,
+      speed: 10,   // Increased speed
+      fireRate: 4, // Increased fire rate
+      damage: 10,  // Increased damage
+      health: 70,  // Increased health
+      defense: 5,  // Added defense
       specialAbility: () => this.powerSurge(),
-      specialAbilityCooldown: 15,
+      specialAbilityCooldown: 10, // Reduced cooldown
     });
     this.color = "red";
     this.powerSurgeActive = false;
@@ -304,8 +305,8 @@ class GlassCannon extends BasePlayer {
     setTimeout(() => {
       this.powerSurgeActive = false;
       this.element.classList.remove("power-surge");
-    }, 5000);
-    return 5000; // Duration of power surge effect
+    }, 7000); // Increased duration
+    return 7000; // Duration of power surge effect
   }
 
   shoot(currentTime) {
@@ -314,7 +315,7 @@ class GlassCannon extends BasePlayer {
       const projectile = new Projectile(
         this.x,
         this.y,
-        this.powerSurgeActive ? this.damage * 2 : this.damage,
+        this.powerSurgeActive ? this.damage * 2.5 : this.damage,
         0,
         this.piercingShotActive,
         this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
@@ -328,13 +329,13 @@ class GlassCannon extends BasePlayer {
 class AllRounder extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 10,
-      fireRate: 2,
-      damage: 5,
-      health: 100,
-      defense: 10,
+      speed: 12,   // Increased speed
+      fireRate: 3, // Increased fire rate
+      damage: 8,   // Increased damage
+      health: 150, // Increased health
+      defense: 20, // Increased defense
       specialAbility: () => this.energyWave(),
-      specialAbilityCooldown: 25,
+      specialAbilityCooldown: 20, // Reduced cooldown
     });
     this.color = "purple";
   }

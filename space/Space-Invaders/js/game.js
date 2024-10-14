@@ -29,6 +29,9 @@ const game = {
   announcements: [],
   assets: {},
 
+  backgroundMusic: null,
+  isMusicPlaying: false,
+
   init() {
     this.container = document.getElementById("game-container");
     this.container.style.width = `${window.innerWidth}px`;
@@ -64,6 +67,9 @@ const game = {
     this.loadAssets(() => {
       this.gameLoop();
     });
+
+    this.backgroundMusic = document.getElementById('background-music');
+    this.addMusicControls();
   
     console.log(
       "Game initialized. Container size:",
@@ -71,6 +77,35 @@ const game = {
       "x",
       this.container.offsetHeight
     );
+  },
+
+  addMusicControls() {
+    const hud = document.getElementById('hud');
+    if (hud) {
+      const musicButton = document.createElement('button');
+      musicButton.id = 'music-toggle';
+      musicButton.className = 'music-toggle-button'; // Add this line
+      musicButton.textContent = this.isMusicPlaying ? 'Pause Music' : 'Play Music';
+      musicButton.addEventListener('click', () => this.toggleMusic());
+      hud.appendChild(musicButton);
+    } else {
+      console.error('HUD element not found');
+    }
+  },
+
+  toggleMusic() {
+    if (this.isMusicPlaying) {
+      this.backgroundMusic.pause();
+      this.isMusicPlaying = false;
+    } else {
+      this.backgroundMusic.play();
+      this.isMusicPlaying = true;
+    }
+    
+    const musicToggle = document.getElementById('music-toggle');
+    if (musicToggle) {
+      musicToggle.textContent = this.isMusicPlaying ? 'Pause Music' : 'Play Music';
+    }
   },
   
   handleResize() {
@@ -141,55 +176,58 @@ const game = {
   },
 
   gameLoop(currentTime) {
-  //  console.log(`Game loop at ${currentTime}`);
     if (!this.lastUpdateTime) this.lastUpdateTime = currentTime;
     const deltaTime = currentTime - this.lastUpdateTime;
-    this.update(currentTime, deltaTime);
+    
+    if (this.isRunning && !this.isPaused) {
+      this.update(currentTime, deltaTime);
+    }
+    
     this.lastUpdateTime = currentTime;
     requestAnimationFrame(this.gameLoop.bind(this));
   },
 
   update(currentTime, deltaTime) {
-    if (this.isRunning && !this.isPaused) {
-      if (this.isLeftPressed) {
-        this.player.move(-1);
-      }
-      if (this.isRightPressed) {
-        this.player.move(1);
-      }
-
-      this.player.update(currentTime);
-
-      this.updateProjectiles();
-      this.updateEnemyProjectiles();
-      this.updatePowerUps();
-      this.updateEntities(currentTime);
-      this.updateEnemies(currentTime);
-
-      this.spawnEnemies(currentTime);
-      this.spawnPowerUps();
-
-      this.checkCollisions();
-
-      if (this.isSpacePressed) {
-        const newProjectiles = this.player.shoot(currentTime);
-        if (newProjectiles) {
-          this.projectiles.push(...newProjectiles);
-          newProjectiles.forEach((proj) =>
-            this.container.appendChild(proj.element)
-          );
-        }
-      }
-
-      if (this.isShiftPressed) {
-        this.player.useSpecialAbility(currentTime);
-        this.isShiftPressed = false;
-      }
-
-      this.comboSystem.update(currentTime);
-      this.updateAnnouncements(currentTime);
-      this.updateHUD();
+    if (!this.player) return;  // Exit early if player doesn't exist
+  
+    if (this.isLeftPressed) {
+      this.player.move(-1);
     }
+    if (this.isRightPressed) {
+      this.player.move(1);
+    }
+  
+    this.player.update(currentTime);
+  
+    this.updateProjectiles();
+    this.updateEnemyProjectiles();
+    this.updatePowerUps();
+    this.updateEntities(currentTime);
+    this.updateEnemies(currentTime);
+  
+    this.spawnEnemies(currentTime);
+    this.spawnPowerUps();
+  
+    this.checkCollisions();
+  
+    if (this.isSpacePressed) {
+      const newProjectiles = this.player.shoot(currentTime);
+      if (newProjectiles) {
+        this.projectiles.push(...newProjectiles);
+        newProjectiles.forEach((proj) =>
+          this.container.appendChild(proj.element)
+        );
+      }
+    }
+  
+    if (this.isShiftPressed) {
+      this.player.useSpecialAbility(currentTime);
+      this.isShiftPressed = false;
+    }
+  
+    this.comboSystem.update(currentTime);
+    this.updateAnnouncements(currentTime);
+    this.updateHUD();
   },
 
   updateProjectiles() {
@@ -349,26 +387,31 @@ const game = {
     while (this.container.firstChild) {
       this.container.removeChild(this.container.firstChild);
     }
-
-
-  // Create HUD
-  const hud = document.createElement('div');
-  hud.id = 'hud';
-  hud.innerHTML = `
-    <div id="score">Score: 0</div>
-    <div id="health">Health: 100</div>
-    <div id="special-cooldown"></div>
-  `;
-  // Apply background
-  this.container.style.backgroundImage = `url(${this.assets.background.src})`;
-  this.container.style.backgroundSize = 'cover';
-  this.container.style.backgroundPosition = 'center';
-  this.container.style.backgroundRepeat = 'no-repeat';
-
-
-  this.container.appendChild(hud);
-
   
+    // Create HUD
+    const hud = document.createElement('div');
+    hud.id = 'hud';
+    hud.innerHTML = `
+      <div id="score">Score: 0</div>
+      <div id="health">Health: 100</div>
+      <div id="special-cooldown"></div>
+    `;
+    this.container.appendChild(hud);
+  
+    // Add music controls after HUD is created
+    this.addMusicControls();
+  
+    if (!this.isMusicPlaying) {
+      this.toggleMusic(); // Start playing music when the game starts
+    }
+  
+    // Apply background
+    this.container.style.backgroundImage = `url(${this.assets.background.src})`;
+    this.container.style.backgroundSize = 'cover';
+    this.container.style.backgroundPosition = 'center';
+    this.container.style.backgroundRepeat = 'no-repeat';
+  
+    // Create player
     const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
     this.player = new PlayerClass(
       this.container.offsetWidth / 2,
@@ -391,39 +434,10 @@ const game = {
   
     // Reset HUD
     this.updateHUD();
+  
+    // Start the game loop
+    this.gameLoop(performance.now());
   },
-
-  // startGame() {
-  //   console.log("Starting game");
-  //   this.isRunning = true;
-  //   this.isPaused = false;
-  //   this.menuManager.hideMenu();
-  //   this.score = 0;
-  //   this.enemies = [];
-  //   this.projectiles = [];
-  //   this.enemyProjectiles = [];
-  //   this.powerUps = [];
-  //   this.entities = [];
-  //   this.comboSystem = new ComboSystem(this);
-  //   this.startTime = performance.now();
-
-  //   const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
-  //   this.player = new PlayerClass(
-  //     this.container.offsetWidth / 2,
-  //     this.container.offsetHeight - 100
-  //   );
-  //   this.player.game = this;
-  //   this.entities.push(this.player);
-  //   this.container.appendChild(this.player.element);
-
-  //   this.lastEnemySpawnTime = 0;
-  //   this.lastBossSpawnTime = 0;
-  //   this.lastPowerUpSpawnTime = 0;
-
-  //   this.isMindControlled = false;
-  //   this.isEMPDissed = false;
-  //   this.timeWarpActive = false;
-  // },
 
   togglePause() {
     console.log("Toggle pause called");
@@ -471,26 +485,13 @@ const game = {
     this.powerUps = [];
     this.entities = [this.player];
   
-    // Show game over menu
-    const gameOverMenu = document.getElementById('game-over-menu');
-    gameOverMenu.classList.remove('hidden');
-    
-    // Update final score
-    const finalScoreElement = document.getElementById('final-score');
-    finalScoreElement.textContent = `Final Score: ${this.score}`;
-    
-    // Add event listeners for buttons
-    document.getElementById('play-again').addEventListener('click', () => this.startGame());
-    document.getElementById('return-to-main').addEventListener('click', () => this.returnToMainMenu());
-    
+    this.menuManager.showMenu("gameOver");
     console.log("Game over");
   },
-
 
   returnToMainMenu() {
     this.isRunning = false;
     this.isPaused = false;
-    document.getElementById('game-over-menu').classList.add('hidden');
     this.menuManager.showMenu("main");
     console.log("Returned to main menu");
   },
@@ -629,7 +630,7 @@ const game = {
     if (currentTime - this.lastEnemySpawnTime >= spawnInterval) {
       console.log('Spawning enemy at', currentTime);
       this.addEnemy(
-        new BasicDrone(Math.random() * this.container.offsetWidth, -50)
+        new BasicDrone(Math.random() * this.container.offsetWidth, -70)
       );
       this.lastEnemySpawnTime = currentTime;
     }

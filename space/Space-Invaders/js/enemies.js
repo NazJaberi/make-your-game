@@ -73,11 +73,11 @@ class BaseEnemy {
     if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
       this.lastShotTime = currentTime;
       const projectileWidth = 5; // Assuming projectile width is 5px
-  
+
       // Calculate spawn position at the right edge
       const spawnX = this.x + (this.width / 2) + (projectileWidth / 2);
       const spawnY = this.y + this.height / 2; // Bottom of the enemy
-  
+
       // Create projectile with angle = Math.PI / 2 (straight down)
       const proj = new EnemyProjectile(
         spawnX,
@@ -87,7 +87,7 @@ class BaseEnemy {
         this.game,
         Math.PI / 2
       );
-  
+
       // Add to game
       this.game.enemyProjectiles.push(proj);
       this.game.container.appendChild(proj.element);
@@ -95,7 +95,6 @@ class BaseEnemy {
   }
 
   update(currentTime) {
-    console.log(`Updating enemy at ${this.x}, ${this.y}, time: ${currentTime}`);
     this.move();
     this.shoot(currentTime);
     this.render();
@@ -105,11 +104,11 @@ class BaseEnemy {
 class BasicDrone extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 20,
-      speed: 1,
-      damage: 10,
+      health: 10, // Reduced health
+      speed: 0.8, // Reduced speed
+      damage: 5,  // Reduced damage
       color: "green",
-      fireRate: 0.2,
+      fireRate: 0.1, // Reduced fire rate
       imageKey: "basicDrone",
     });
   }
@@ -118,11 +117,11 @@ class BasicDrone extends BaseEnemy {
 class SpeedyZapper extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 15,
-      speed: 2,
-      damage: 5,
+      health: 8,  // Reduced health
+      speed: 1.5, // Reduced speed
+      damage: 3,  // Reduced damage
       color: "cyan",
-      fireRate: 0.3,
+      fireRate: 0.15, // Reduced fire rate
       imageKey: "speedyZapper",
     });
     this.amplitude = 50;
@@ -141,11 +140,11 @@ class SpeedyZapper extends BaseEnemy {
 class ArmoredSaucer extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 40,
-      speed: 0.5,
-      damage: 15,
+      health: 20, // Reduced health
+      speed: 0.4, // Reduced speed
+      damage: 8,  // Reduced damage
       color: "gray",
-      fireRate: 0.1,
+      fireRate: 0.05, // Reduced fire rate
       imageKey: "armoredSaucer",
     });
   }
@@ -159,9 +158,9 @@ class ArmoredSaucer extends BaseEnemy {
 class SplittingCube extends BaseEnemy {
   constructor(x, y, size = 40) {
     super(x, y, {
-      health: size === 40 ? 30 : 15,
-      speed: 0.75,
-      damage: 10,
+      health: size === 40 ? 15 : 8, // Reduced health
+      speed: 0.5, // Reduced speed
+      damage: 5,  // Reduced damage
       color: "orange",
       width: size,
       height: size,
@@ -175,15 +174,15 @@ class SplittingCube extends BaseEnemy {
 class ShieldedOrb extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 25,
-      speed: 1,
-      damage: 10,
+      health: 12, // Reduced health
+      speed: 0.8, // Reduced speed
+      damage: 5,  // Reduced damage
       color: "violet",
-      fireRate: 0.2,
+      fireRate: 0.1, // Reduced fire rate
       imageKey: "shieldedOrb",
     });
-    this.shieldDuration = 2000; // 2 seconds
-    this.shieldCooldown = 5000; // Every 5 seconds
+    this.shieldDuration = 1500; // Reduced shield duration
+    this.shieldCooldown = 3000; // Reduced cooldown
     this.isShielded = false;
     this.lastShieldTime = 0;
 
@@ -232,9 +231,9 @@ class BossEnemy extends BaseEnemy {
 class Mothership extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 500,
-      speed: 0.25,
-      damage: 25,
+      health: 300, // Reduced health
+      speed: 0.2,  // Reduced speed
+      damage: 15,  // Reduced damage
       color: "maroon",
       width: 100,
       height: 100,
@@ -242,9 +241,9 @@ class Mothership extends BossEnemy {
       name: "Mothership",
     });
     this.lastDroneSpawnTime = 0;
-    this.droneSpawnInterval = 10000; // 10 seconds
+    this.droneSpawnInterval = 5000; // Increased spawn frequency
     this.lastLaserTime = 0;
-    this.laserInterval = 30000; // 30 seconds
+    this.laserInterval = 20000; // Reduced laser interval
   }
 
   update(currentTime) {
@@ -296,9 +295,9 @@ class Mothership extends BossEnemy {
 class QuantumShifter extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 400,
-      speed: 1.5,
-      damage: 20,
+      health: 250, // Reduced health
+      speed: 1.0,  // Reduced speed
+      damage: 12,  // Reduced damage
       color: "teal",
       width: 80,
       height: 80,
@@ -306,9 +305,8 @@ class QuantumShifter extends BossEnemy {
       name: "Quantum Shifter",
     });
     this.lastTeleportTime = 0;
-    this.teleportInterval = 15000; // 15 seconds
-    this.lastBlackHoleTime = 0;
-    this.blackHoleInterval = 30000; // 30 seconds
+    this.teleportInterval = 8000; // Increased teleport frequency
+    this.lastBlackHoleTime = 20000; // Reduced black hole interval
   }
 
   update(currentTime) {
@@ -331,9 +329,9 @@ class QuantumShifter extends BossEnemy {
 class HiveMind extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 450,
-      speed: 0.5,
-      damage: 15,
+      health: 280, // Reduced health
+      speed: 0.3,  // Reduced speed
+      damage: 10,  // Reduced damage
       color: "olive",
       width: 90,
       height: 90,
@@ -341,9 +339,8 @@ class HiveMind extends BossEnemy {
       name: "Hive Mind",
     });
     this.lastSwarmTime = 0;
-    this.swarmInterval = 10000; // 10 seconds
-    this.lastMindControlTime = 0;
-    this.mindControlInterval = 30000; // 30 seconds
+    this.swarmInterval = 5000; // Increased swarm frequency
+    this.lastMindControlTime = 20000; // Reduced mind control interval
   }
 
   update(currentTime) {
@@ -351,7 +348,7 @@ class HiveMind extends BossEnemy {
 
     // Summon Swarm
     if (currentTime - this.lastSwarmTime >= this.swarmInterval) {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         this.game.addEnemy(
           new SpeedyZapper(
             Math.random() * this.game.container.offsetWidth,
@@ -373,9 +370,9 @@ class HiveMind extends BossEnemy {
 class TechnoTitan extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 600,
-      speed: 0.3,
-      damage: 30,
+      health: 350, // Reduced health
+      speed: 0.2,  // Reduced speed
+      damage: 18,  // Reduced damage
       color: "silver",
       width: 110,
       height: 110,
@@ -387,7 +384,7 @@ class TechnoTitan extends BossEnemy {
       { x: x + 30, y: y, width: 20, height: 20, destroyed: false },
     ];
     this.lastEMPTime = 0;
-    this.EMPInterval = 30000; // 30 seconds
+    this.EMPInterval = 20000; // Reduced EMP interval
 
     // Create weak point elements
     this.weakPointElements = this.weakPoints.map((wp, index) => {
@@ -437,9 +434,9 @@ class TechnoTitan extends BossEnemy {
 class CosmicHydra extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 550,
-      speed: 0.4,
-      damage: 25,
+      health: 320, // Reduced health
+      speed: 0.3,  // Reduced speed
+      damage: 15,  // Reduced damage
       color: "navy",
       width: 100,
       height: 100,
@@ -447,9 +444,8 @@ class CosmicHydra extends BossEnemy {
       name: "Cosmic Hydra",
     });
     this.lastRegenTime = 0;
-    this.regenInterval = 5000; // 5 seconds
-    this.lastMissileTime = 0;
-    this.missileInterval = 20000; // 20 seconds
+    this.regenInterval = 3000; // Increased regen frequency
+    this.lastMissileTime = 15000; // Reduced missile interval
   }
 
   update(currentTime) {
@@ -457,7 +453,7 @@ class CosmicHydra extends BossEnemy {
 
     // Regenerate Health
     if (currentTime - this.lastRegenTime >= this.regenInterval) {
-      this.health = Math.min(this.health + 20, this.maxHealth);
+      this.health = Math.min(this.health + 30, this.maxHealth);
       this.updateHealthBar();
       this.lastRegenTime = currentTime;
     }
