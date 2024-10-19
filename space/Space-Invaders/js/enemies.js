@@ -7,16 +7,16 @@ class BaseEnemy {
     this.y = y;
     this.width = stats.width || 70;
     this.height = stats.height || 70;
-    this.speed = stats.speed || 1;
+    this.speed = stats.speed || 0.5;
     this.health = stats.health;
     this.maxHealth = stats.health;
-    this.damage = stats.damage || 10;
+    this.damage = stats.damage || 5;
     this.color = stats.color || "green";
     this.isInvulnerable = false;
     this.lastAbilityTime = 0;
     this.lastShotTime = 0;
-    this.fireRate = stats.fireRate || 0.5; // Default enemy fire rate
-    this.imageKey = stats.imageKey || null; // Key to access the image in game.assets
+    this.fireRate = stats.fireRate || 0.3;
+    this.imageKey = stats.imageKey || null;
 
     // Create DOM element
     this.element = document.createElement("div");
@@ -102,11 +102,11 @@ class BaseEnemy {
 class BasicDrone extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 10, // Reduced health
-      speed: 0.8, // Reduced speed
-      damage: 5,  // Reduced damage
+      health: 1,
+      speed: 0.5,
+      damage: 3,
       color: "green",
-      fireRate: 0.1, // Reduced fire rate
+      fireRate: 0.1,
       imageKey: "basicDrone",
     });
   }
@@ -115,14 +115,14 @@ class BasicDrone extends BaseEnemy {
 class SpeedyZapper extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 8,  // Reduced health
-      speed: 1.5, // Reduced speed
-      damage: 3,  // Reduced damage
+      health: 3,
+      speed: 1.2,
+      damage: 2,
       color: "cyan",
-      fireRate: 0.15, // Reduced fire rate
+      fireRate: 0.2,
       imageKey: "speedyZapper",
     });
-    this.amplitude = 50;
+    this.amplitude = 40;
     this.frequency = 0.05;
     this.startX = x;
     this.age = 0;
@@ -138,17 +138,16 @@ class SpeedyZapper extends BaseEnemy {
 class ArmoredSaucer extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 20, // Reduced health
-      speed: 0.4, // Reduced speed
-      damage: 8,  // Reduced damage
+      health: 15,
+      speed: 0.3,
+      damage: 5,
       color: "gray",
-      fireRate: 0.05, // Reduced fire rate
+      fireRate: 0.05,
       imageKey: "armoredSaucer",
     });
   }
 
   takeDamage(amount) {
-    // Reduces damage by half (simulate armor)
     return super.takeDamage(amount / 2);
   }
 }
@@ -156,9 +155,9 @@ class ArmoredSaucer extends BaseEnemy {
 class SplittingCube extends BaseEnemy {
   constructor(x, y, size = 40) {
     super(x, y, {
-      health: size === 40 ? 15 : 8, // Reduced health
-      speed: 0.5, // Reduced speed
-      damage: 5,  // Reduced damage
+      health: size === 40 ? 8 : 4,
+      speed: 0.4,
+      damage: 4,
       color: "orange",
       width: size,
       height: size,
@@ -172,19 +171,18 @@ class SplittingCube extends BaseEnemy {
 class ShieldedOrb extends BaseEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 12, // Reduced health
-      speed: 0.8, // Reduced speed
-      damage: 5,  // Reduced damage
+      health: 10,
+      speed: 0.6,
+      damage: 4,
       color: "violet",
-      fireRate: 0.1, // Reduced fire rate
+      fireRate: 0.1,
       imageKey: "shieldedOrb",
     });
-    this.shieldDuration = 1500; // Reduced shield duration
-    this.shieldCooldown = 3000; // Reduced cooldown
+    this.shieldDuration = 1200;
+    this.shieldCooldown = 4000;
     this.isShielded = false;
     this.lastShieldTime = 0;
 
-    // Create shield element
     this.shieldElement = document.createElement("div");
     this.shieldElement.className = "enemy-shield";
     this.shieldElement.style.display = "none";
@@ -210,7 +208,6 @@ class ShieldedOrb extends BaseEnemy {
   }
 }
 
-// Boss Classes
 class BossEnemy extends BaseEnemy {
   constructor(x, y, stats) {
     super(x, y, stats);
@@ -218,7 +215,6 @@ class BossEnemy extends BaseEnemy {
     this.imageKey = stats.imageKey || null;
     this.name = stats.name || "Boss";
 
-    // Create name label
     this.nameLabel = document.createElement("div");
     this.nameLabel.className = "boss-name";
     this.nameLabel.textContent = this.name;
@@ -229,25 +225,24 @@ class BossEnemy extends BaseEnemy {
 class Mothership extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 300, // Reduced health
-      speed: 0.2,  // Reduced speed
-      damage: 15,  // Reduced damage
+      health: 200,
+      speed: 0.15,
+      damage: 10,
       color: "maroon",
-      width: 200,
-      height: 200,
+      width: 180,
+      height: 180,
       imageKey: "mothership",
       name: "Mothership",
     });
     this.lastDroneSpawnTime = 0;
-    this.droneSpawnInterval = 5000; // Increased spawn frequency
+    this.droneSpawnInterval = 6000;
     this.lastLaserTime = 0;
-    this.laserInterval = 20000; // Reduced laser interval
+    this.laserInterval = 25000;
   }
 
   update(currentTime) {
     super.update(currentTime);
 
-    // Spawn Basic Drones
     if (currentTime - this.lastDroneSpawnTime >= this.droneSpawnInterval) {
       this.game.addEnemy(
         new BasicDrone(
@@ -258,7 +253,6 @@ class Mothership extends BossEnemy {
       this.lastDroneSpawnTime = currentTime;
     }
 
-    // Fire Laser Beam (Special Attack)
     if (currentTime - this.lastLaserTime >= this.laserInterval) {
       this.game.fireLaserBeam(this);
       this.lastLaserTime = currentTime;
@@ -268,7 +262,6 @@ class Mothership extends BossEnemy {
   shoot(currentTime) {
     if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
       this.lastShotTime = currentTime;
-      // Shoot from both sides
       const leftProj = new EnemyProjectile(
         this.x - this.width / 4,
         this.y + this.height / 2,
@@ -293,30 +286,29 @@ class Mothership extends BossEnemy {
 class QuantumShifter extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 250, // Reduced health
-      speed: 1.0,  // Reduced speed
-      damage: 12,  // Reduced damage
+      health: 180,
+      speed: 0.8,
+      damage: 8,
       color: "teal",
-      width: 80,
-      height: 80,
+      width: 70,
+      height: 70,
       imageKey: "quantumShifter",
       name: "Quantum Shifter",
     });
     this.lastTeleportTime = 0;
-    this.teleportInterval = 8000; // Increased teleport frequency
-    this.lastBlackHoleTime = 20000; // Reduced black hole interval
+    this.teleportInterval = 10000;
+    this.lastBlackHoleTime = 0;
+    this.blackHoleInterval = 30000;
   }
 
   update(currentTime) {
     super.update(currentTime);
 
-    // Teleport
     if (currentTime - this.lastTeleportTime >= this.teleportInterval) {
       this.x = Math.random() * this.game.container.offsetWidth;
       this.lastTeleportTime = currentTime;
     }
 
-    // Create Black Hole
     if (currentTime - this.lastBlackHoleTime >= this.blackHoleInterval) {
       this.game.createBlackHole(this);
       this.lastBlackHoleTime = currentTime;
@@ -327,24 +319,24 @@ class QuantumShifter extends BossEnemy {
 class HiveMind extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 280, // Reduced health
-      speed: 0.3,  // Reduced speed
-      damage: 10,  // Reduced damage
+      health: 220,
+      speed: 0.25,
+      damage: 7,
       color: "olive",
-      width: 90,
-      height: 90,
+      width: 80,
+      height: 80,
       imageKey: "hiveMind",
       name: "Hive Mind",
     });
     this.lastSwarmTime = 0;
-    this.swarmInterval = 5000; // Increased swarm frequency
-    this.lastMindControlTime = 20000; // Reduced mind control interval
+    this.swarmInterval = 7000;
+    this.lastMindControlTime = 0;
+    this.mindControlInterval = 35000;
   }
 
   update(currentTime) {
     super.update(currentTime);
 
-    // Summon Swarm
     if (currentTime - this.lastSwarmTime >= this.swarmInterval) {
       for (let i = 0; i < 3; i++) {
         this.game.addEnemy(
@@ -357,7 +349,6 @@ class HiveMind extends BossEnemy {
       this.lastSwarmTime = currentTime;
     }
 
-    // Mind Control
     if (currentTime - this.lastMindControlTime >= this.mindControlInterval) {
       this.game.activateMindControl();
       this.lastMindControlTime = currentTime;
@@ -368,12 +359,12 @@ class HiveMind extends BossEnemy {
 class TechnoTitan extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 350, // Reduced health
-      speed: 0.2,  // Reduced speed
-      damage: 18,  // Reduced damage
+      health: 250,
+      speed: 0.18,
+      damage: 12,
       color: "silver",
-      width: 110,
-      height: 110,
+      width: 100,
+      height: 100,
       imageKey: "technoTitan",
       name: "Techno Titan",
     });
@@ -382,9 +373,8 @@ class TechnoTitan extends BossEnemy {
       { x: x + 30, y: y, width: 20, height: 20, destroyed: false },
     ];
     this.lastEMPTime = 0;
-    this.EMPInterval = 20000; // Reduced EMP interval
+    this.EMPInterval = 30000;
 
-    // Create weak point elements
     this.weakPointElements = this.weakPoints.map((wp, index) => {
       const wpElement = document.createElement("div");
       wpElement.className = "weak-point";
@@ -398,7 +388,6 @@ class TechnoTitan extends BossEnemy {
   }
 
   takeDamage(amount) {
-    // Can only be damaged if weak points are destroyed
     if (this.weakPoints.every((wp) => wp.destroyed)) {
       return super.takeDamage(amount);
     }
@@ -408,13 +397,11 @@ class TechnoTitan extends BossEnemy {
   update(currentTime) {
     super.update(currentTime);
 
-    // EMP Blast
     if (currentTime - this.lastEMPTime >= this.EMPInterval) {
       this.game.activateEMP();
       this.lastEMPTime = currentTime;
     }
 
-    // Update weak point positions
     this.weakPoints.forEach((wp, index) => {
       wp.x = this.x + (index === 0 ? -30 : 30);
       wp.y = this.y;
@@ -432,31 +419,30 @@ class TechnoTitan extends BossEnemy {
 class CosmicHydra extends BossEnemy {
   constructor(x, y) {
     super(x, y, {
-      health: 320, // Reduced health
-      speed: 0.3,  // Reduced speed
-      damage: 15,  // Reduced damage
+      health: 230,
+      speed: 0.25,
+      damage: 9,
       color: "navy",
-      width: 100,
-      height: 100,
+      width: 90,
+      height: 90,
       imageKey: "cosmicHydra",
       name: "Cosmic Hydra",
     });
     this.lastRegenTime = 0;
-    this.regenInterval = 3000; // Increased regen frequency
-    this.lastMissileTime = 15000; // Reduced missile interval
+    this.regenInterval = 4000;
+    this.lastMissileTime = 0;
+    this.missileInterval = 20000;
   }
 
   update(currentTime) {
     super.update(currentTime);
 
-    // Regenerate Health
     if (currentTime - this.lastRegenTime >= this.regenInterval) {
-      this.health = Math.min(this.health + 30, this.maxHealth);
+      this.health = Math.min(this.health + 20, this.maxHealth);
       this.updateHealthBar();
       this.lastRegenTime = currentTime;
     }
 
-    // Fire Homing Missiles
     if (currentTime - this.lastMissileTime >= this.missileInterval) {
       this.game.fireHomingMissiles(this);
       this.lastMissileTime = currentTime;

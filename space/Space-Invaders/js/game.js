@@ -344,6 +344,7 @@ const game = {
 
   startGame() {
     console.log("Starting game");
+    this.resetGame();
     this.isRunning = true;
     this.isPaused = false;
     this.menuManager.hideMenu();
@@ -440,19 +441,6 @@ const game = {
   gameOver() {
     this.isRunning = false;
     this.addAnnouncement("Game Over", 5000);
-    
-    // Clear all game objects
-    this.enemies.forEach(enemy => enemy.element.remove());
-    this.projectiles.forEach(proj => proj.element.remove());
-    this.enemyProjectiles.forEach(proj => proj.element.remove());
-    this.entities.forEach(entity => {
-      if (entity == this.player) entity.element.remove();
-    });
-    
-    this.enemies = [];
-    this.projectiles = [];
-    this.enemyProjectiles = [];
-    this.entities = [this.player];
   
     this.menuManager.showMenu("gameOver");
     console.log("Game over");
@@ -461,9 +449,53 @@ const game = {
   returnToMainMenu() {
     this.isRunning = false;
     this.isPaused = false;
+    this.resetGame();
     this.menuManager.showMenu("main");
     console.log("Returned to main menu");
   },
+  resetGame() {
+    // Stop the game loop
+    this.isRunning = false;
+    this.isPaused = false;
+
+    // Clear all game objects
+    this.enemies.forEach(enemy => enemy.element.remove());
+    this.projectiles.forEach(proj => proj.element.remove());
+    this.enemyProjectiles.forEach(proj => proj.element.remove());
+    this.entities.forEach(entity => entity.element.remove());
+    
+    // Reset game state
+    this.enemies = [];
+    this.projectiles = [];
+    this.enemyProjectiles = [];
+    this.entities = [];
+    this.player = null;
+    this.score = 0;
+
+    // Clear the game container
+    while (this.container.firstChild) {
+      this.container.removeChild(this.container.firstChild);
+    }
+  
+      // Reset the container background
+      this.container.style.backgroundImage = '';
+
+      // Stop game music and start menu music
+      const gameMusic = document.getElementById('background-music');
+      gameMusic.pause();
+      gameMusic.currentTime = 0;
+  
+      // Reset other game states
+      this.isMindControlled = false;
+      this.isEMPDissed = false;
+      this.timeWarpActive = false;
+  
+      // Reset spawn timers
+      this.lastEnemySpawnTime = 0;
+      this.lastBossSpawnTime = 0;
+  
+      console.log("Game reset");
+    },
 
   checkCollisions() {
     this.checkProjectileEnemyCollisions();
