@@ -265,7 +265,7 @@ const game = {
         if (playerDead) {
           this.gameOver();
         }
-      } 
+      }
     });
   },
 
@@ -577,7 +577,6 @@ const game = {
     let spawnInterval = Math.max(2000 - elapsedMinutes * 100, 500);
     if (!this.lastEnemySpawnTime) this.lastEnemySpawnTime = currentTime;
 
-    // **Enemy Cap Check**
     if (this.enemies.length >= 10) {
       console.log("Enemy cap reached. Not spawning new enemies.");
       return;
@@ -586,7 +585,6 @@ const game = {
     if (currentTime - this.lastEnemySpawnTime >= spawnInterval) {
       console.log('Spawning enemy at', currentTime);
 
-      // **Use getNonOverlappingPosition**
       const x = this.getNonOverlappingPosition(70); // Width of BasicDrone
       this.addEnemy(
         new BasicDrone(x, -70)
@@ -622,7 +620,6 @@ const game = {
       );
     }
 
-    // **Boss spawning remains unchanged**
     if (elapsedMinutes >= 2) {
       if (
         !this.lastBossSpawnTime ||
@@ -634,7 +631,6 @@ const game = {
     }
   },
 
-  // **New Method to Get Non-Overlapping Position**
   getNonOverlappingPosition(width) {
     const margin = 50; // Margin from the edges
     const maxAttempts = 10;
@@ -656,7 +652,6 @@ const game = {
     // If unable to find non-overlapping position, return x anyway
     return x;
   },
-
 
   spawnBoss() {
     const bosses = [

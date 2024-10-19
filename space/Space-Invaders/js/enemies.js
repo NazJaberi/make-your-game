@@ -233,8 +233,8 @@ class Mothership extends BossEnemy {
       speed: 0.2,  // Reduced speed
       damage: 15,  // Reduced damage
       color: "maroon",
-      width: 100,
-      height: 100,
+      width: 200,
+      height: 200,
       imageKey: "mothership",
       name: "Mothership",
     });

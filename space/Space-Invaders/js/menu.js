@@ -2,24 +2,33 @@ class MenuManager {
   constructor(game) {
     this.game = game;
     this.currentMenu = null;
-    this.buttonHoverIndex = -1;
+    
     this.menuContainer = document.createElement("div");
-    this.menuContainer.className = "menu-container";
-    this.menuContainer.style.position = "absolute";
+    this.menuContainer.id = "menu-container";
+    this.menuContainer.style.position = "fixed";
     this.menuContainer.style.top = "0";
     this.menuContainer.style.left = "0";
     this.menuContainer.style.width = "100%";
     this.menuContainer.style.height = "100%";
+    this.menuContainer.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
     this.menuContainer.style.display = "none";
-    this.game.container.appendChild(this.menuContainer);
+    this.menuContainer.style.flexDirection = "column";
+    this.menuContainer.style.justifyContent = "center";
+    this.menuContainer.style.alignItems = "center";
+    this.menuContainer.style.zIndex = "10000";
+    
+    document.body.appendChild(this.menuContainer);
+
     this.menuBackground = document.getElementById('menu-background');
     this.menuMusic = document.getElementById('menu-music');
     this.gameMusic = document.getElementById('background-music');
   }
 
   showMenu(menuName) {
+    console.log(`Showing menu: ${menuName}`);
     this.currentMenu = menuName;
-    this.menuContainer.style.display = "block";
+    
+    this.menuContainer.style.display = "flex";
     
     if (menuName === "main" || menuName === "characterSelect") {
       this.menuBackground.style.display = "block";
@@ -35,7 +44,12 @@ class MenuManager {
     }
 
     this.renderMenu();
-    console.log(`Showing menu: ${menuName}`);
+    
+    // Force a reflow
+    void this.menuContainer.offsetWidth;
+    
+    console.log("Menu container style:", this.menuContainer.style.cssText);
+    console.log("Menu container bounding rect:", this.menuContainer.getBoundingClientRect());
   }
 
   hideMenu() {
@@ -82,8 +96,8 @@ class MenuManager {
     }
   }
 
-
   renderMainMenu() {
+    console.log("Rendering main menu");
     const menuContent = document.createElement("div");
     menuContent.style.position = "relative";
     menuContent.style.zIndex = "1";
@@ -91,20 +105,32 @@ class MenuManager {
 
     const title = document.createElement("h1");
     title.textContent = "Space Invaders";
+    title.style.textAlign = "center";
     title.style.marginTop = "20%";
 
     const startButton = this.createButton("Start Game", () => {
       this.game.showCharacterSelect();
     });
 
+    const highScoreButton = this.createButton("High Score", () => {
+      // Implement high score functionality
+      console.log("Show high score");
+    });
+
     menuContent.appendChild(title);
     menuContent.appendChild(startButton);
+    menuContent.appendChild(highScoreButton);
 
-    this.menuContainer.innerHTML = '';
     this.menuContainer.appendChild(menuContent);
   }
 
   renderCharacterSelect() {
+    console.log("Rendering character select menu");
+    const menuContent = document.createElement("div");
+    menuContent.style.position = "relative";
+    menuContent.style.zIndex = "1";
+    menuContent.style.textAlign = "center";
+
     const title = document.createElement("h2");
     title.textContent = "Select Your Character";
     title.style.textAlign = "center";
@@ -164,30 +190,40 @@ class MenuManager {
       characterContainer.appendChild(charBox);
     });
 
-    this.menuContainer.appendChild(title);
-    this.menuContainer.appendChild(characterContainer);
+    menuContent.appendChild(title);
+    menuContent.appendChild(characterContainer);
+
     this.menuContainer.appendChild(menuContent);
   }
 
   renderPauseMenu() {
+    console.log("Rendering pause menu");
+    this.menuContainer.innerHTML = '';
+  
     const title = document.createElement("h2");
-    title.textContent = "Paused";
-    title.style.textAlign = "center";
-
+    title.textContent = "PAUSED";
+    title.style.color = "white";
+    title.style.fontSize = "48px";
+  
     const resumeButton = this.createButton("Resume", () => {
+      console.log("Resume button clicked");
       this.game.resumeGame();
     });
-
-    const mainMenuButton = this.createButton("Main Menu", () => {
+  
+    const mainMenuButton = this.createButton("Back to Menu", () => {
+      console.log("Main menu button clicked");
       this.game.returnToMainMenu();
     });
-
+  
     this.menuContainer.appendChild(title);
     this.menuContainer.appendChild(resumeButton);
     this.menuContainer.appendChild(mainMenuButton);
+  
+    console.log("Pause menu rendered");
   }
 
   renderGameOver() {
+    console.log("Rendering game over menu");
     const title = document.createElement("h2");
     title.textContent = "Game Over";
     title.style.textAlign = "center";
@@ -196,7 +232,7 @@ class MenuManager {
     score.textContent = `Score: ${this.game.score}`;
     score.style.textAlign = "center";
 
-    const mainMenuButton = this.createButton("Return to Main Menu", () => {
+    const mainMenuButton = this.createButton("Return to Home", () => {
       this.game.returnToMainMenu();
     });
 
@@ -208,12 +244,19 @@ class MenuManager {
   createButton(text, onClick) {
     const button = document.createElement("button");
     button.textContent = text;
-    button.style.display = "block";
-    button.style.margin = "10px auto";
+    button.style.backgroundColor = "white";
+    button.style.color = "black";
+    button.style.border = "none";
     button.style.padding = "10px 20px";
-    button.style.fontSize = "18px";
+    button.style.margin = "10px";
+    button.style.fontSize = "24px";
     button.style.cursor = "pointer";
-    button.addEventListener("click", onClick);
+    button.style.borderRadius = "5px";
+    button.addEventListener("click", (e) => {
+      console.log(`Button "${text}" clicked`);
+      onClick(e);
+    });
+    console.log(`Created button: ${text}`);
     return button;
   }
 }
