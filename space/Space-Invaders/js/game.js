@@ -353,6 +353,9 @@ const game = {
     this.enemyProjectiles = [];
     this.entities = [];
     this.startTime = performance.now();
+
+    const gameMusic = document.getElementById('background-music');
+    gameMusic.play();
   
     // Clear the game container
     while (this.container.firstChild) {
@@ -573,39 +576,53 @@ const game = {
     const elapsedMinutes = (currentTime - this.startTime) / 60000;
     let spawnInterval = Math.max(2000 - elapsedMinutes * 100, 500);
     if (!this.lastEnemySpawnTime) this.lastEnemySpawnTime = currentTime;
-  
+
+    // **Enemy Cap Check**
+    if (this.enemies.length >= 10) {
+      console.log("Enemy cap reached. Not spawning new enemies.");
+      return;
+    }
+
     if (currentTime - this.lastEnemySpawnTime >= spawnInterval) {
       console.log('Spawning enemy at', currentTime);
+
+      // **Use getNonOverlappingPosition**
+      const x = this.getNonOverlappingPosition(70); // Width of BasicDrone
       this.addEnemy(
-        new BasicDrone(Math.random() * this.container.offsetWidth, -70)
+        new BasicDrone(x, -70)
       );
       this.lastEnemySpawnTime = currentTime;
     }
 
-    if (elapsedMinutes >= 1 && Math.random() < 0.02) {
+    if (elapsedMinutes >= 1 && Math.random() < 0.02 && this.enemies.length < 10) {
+      const x = this.getNonOverlappingPosition(70); // Width of SpeedyZapper
       this.addEnemy(
-        new SpeedyZapper(Math.random() * this.container.offsetWidth, -50)
+        new SpeedyZapper(x, -50)
       );
     }
 
-    if (elapsedMinutes >= 2 && Math.random() < 0.01) {
+    if (elapsedMinutes >= 2 && Math.random() < 0.01 && this.enemies.length < 10) {
+      const x = this.getNonOverlappingPosition(70); // Width of ArmoredSaucer
       this.addEnemy(
-        new ArmoredSaucer(Math.random() * this.container.offsetWidth, -50)
+        new ArmoredSaucer(x, -50)
       );
     }
 
-    if (elapsedMinutes >= 3 && Math.random() < 0.005) {
+    if (elapsedMinutes >= 3 && Math.random() < 0.005 && this.enemies.length < 10) {
+      const x = this.getNonOverlappingPosition(40); // Width of SplittingCube
       this.addEnemy(
-        new SplittingCube(Math.random() * this.container.offsetWidth, -50)
+        new SplittingCube(x, -50)
       );
     }
 
-    if (elapsedMinutes >= 4 && Math.random() < 0.002) {
+    if (elapsedMinutes >= 4 && Math.random() < 0.002 && this.enemies.length < 10) {
+      const x = this.getNonOverlappingPosition(70); // Width of ShieldedOrb
       this.addEnemy(
-        new ShieldedOrb(Math.random() * this.container.offsetWidth, -50)
+        new ShieldedOrb(x, -50)
       );
     }
 
+    // **Boss spawning remains unchanged**
     if (elapsedMinutes >= 2) {
       if (
         !this.lastBossSpawnTime ||
@@ -616,6 +633,30 @@ const game = {
       }
     }
   },
+
+  // **New Method to Get Non-Overlapping Position**
+  getNonOverlappingPosition(width) {
+    const margin = 50; // Margin from the edges
+    const maxAttempts = 10;
+    let attempts = 0;
+    let x;
+    const containerWidth = this.container.offsetWidth;
+
+    do {
+      x = Math.random() * (containerWidth - 2 * margin) + margin;
+      attempts++;
+      const overlapping = this.enemies.some(enemy => {
+        return Math.abs(enemy.x - x) < (enemy.width + width) / 2;
+      });
+      if (!overlapping) {
+        return x;
+      }
+    } while (attempts < maxAttempts);
+
+    // If unable to find non-overlapping position, return x anyway
+    return x;
+  },
+
 
   spawnBoss() {
     const bosses = [

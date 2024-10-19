@@ -12,11 +12,28 @@ class MenuManager {
     this.menuContainer.style.height = "100%";
     this.menuContainer.style.display = "none";
     this.game.container.appendChild(this.menuContainer);
+    this.menuBackground = document.getElementById('menu-background');
+    this.menuMusic = document.getElementById('menu-music');
+    this.gameMusic = document.getElementById('background-music');
   }
 
   showMenu(menuName) {
     this.currentMenu = menuName;
     this.menuContainer.style.display = "block";
+    
+    if (menuName === "main" || menuName === "characterSelect") {
+      this.menuBackground.style.display = "block";
+      this.menuBackground.play();
+      
+      this.menuMusic.play();
+      this.gameMusic.pause();
+    } else {
+      this.menuBackground.style.display = "none";
+      this.menuBackground.pause();
+      
+      this.menuMusic.pause();
+    }
+
     this.renderMenu();
     console.log(`Showing menu: ${menuName}`);
   }
@@ -24,6 +41,11 @@ class MenuManager {
   hideMenu() {
     this.currentMenu = null;
     this.menuContainer.style.display = "none";
+    
+    this.menuBackground.style.display = "none";
+    this.menuBackground.pause();
+    
+    this.menuMusic.pause();
   }
 
   handleClick(x, y) {
@@ -60,18 +82,26 @@ class MenuManager {
     }
   }
 
+
   renderMainMenu() {
+    const menuContent = document.createElement("div");
+    menuContent.style.position = "relative";
+    menuContent.style.zIndex = "1";
+    menuContent.style.textAlign = "center";
+
     const title = document.createElement("h1");
     title.textContent = "Space Invaders";
-    title.style.textAlign = "center";
     title.style.marginTop = "20%";
 
     const startButton = this.createButton("Start Game", () => {
       this.game.showCharacterSelect();
     });
 
-    this.menuContainer.appendChild(title);
-    this.menuContainer.appendChild(startButton);
+    menuContent.appendChild(title);
+    menuContent.appendChild(startButton);
+
+    this.menuContainer.innerHTML = '';
+    this.menuContainer.appendChild(menuContent);
   }
 
   renderCharacterSelect() {
@@ -136,6 +166,7 @@ class MenuManager {
 
     this.menuContainer.appendChild(title);
     this.menuContainer.appendChild(characterContainer);
+    this.menuContainer.appendChild(menuContent);
   }
 
   renderPauseMenu() {
