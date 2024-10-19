@@ -133,32 +133,6 @@ button:hover {
   transition: opacity 1s;
 }
 
-.combo-meter {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20px;
-  color: white;
-  text-align: center;
-}
-
-.combo-timer-bar {
-  width: 200px;
-  height: 10px;
-  background-color: #333;
-  margin-top: 5px;
-}
-
-.combo-timer-bar::before {
-  content: "";
-  display: block;
-  height: 100%;
-  background-color: yellow;
-  width: 100%;
-  transition: width 0.1s linear;
-}
-
 .hidden {
   display: none;
 }

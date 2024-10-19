@@ -44,13 +44,11 @@ const game = {
     this.enemies = [];
     this.projectiles = [];
     this.enemyProjectiles = [];
-    this.powerUps = [];
     this.entities = [];
   
     this.isRunning = false;
     this.isPaused = false;
     this.score = 0;
-    this.comboSystem = new ComboSystem(this);
   
     this.startTime = 0;
   
@@ -84,7 +82,7 @@ const game = {
     if (hud) {
       const musicButton = document.createElement('button');
       musicButton.id = 'music-toggle';
-      musicButton.className = 'music-toggle-button'; // Add this line
+      musicButton.className = 'music-toggle-button';
       musicButton.textContent = this.isMusicPlaying ? 'Pause Music' : 'Play Music';
       musicButton.addEventListener('click', () => this.toggleMusic());
       hud.appendChild(musicButton);
@@ -162,7 +160,7 @@ const game = {
       const img = new Image();
       img.src = src;
       img.onload = () => {
-        console.log(`Loaded image: ${key}`); // Add this line
+        console.log(`Loaded image: ${key}`);
         assetsLoaded++;
         if (assetsLoaded >= assetsToLoad) {
           callback();
@@ -188,7 +186,7 @@ const game = {
   },
 
   update(currentTime, deltaTime) {
-    if (!this.player) return;  // Exit early if player doesn't exist
+    if (!this.player) return;  
   
     if (this.isLeftPressed) {
       this.player.move(-1);
@@ -201,12 +199,10 @@ const game = {
   
     this.updateProjectiles();
     this.updateEnemyProjectiles();
-    this.updatePowerUps();
     this.updateEntities(currentTime);
     this.updateEnemies(currentTime);
   
     this.spawnEnemies(currentTime);
-    this.spawnPowerUps();
   
     this.checkCollisions();
   
@@ -225,7 +221,6 @@ const game = {
       this.isShiftPressed = false;
     }
   
-    this.comboSystem.update(currentTime);
     this.updateAnnouncements(currentTime);
     this.updateHUD();
   },
@@ -253,19 +248,6 @@ const game = {
       } else {
         proj.element.style.left = `${proj.x}px`;
         proj.element.style.top = `${proj.y}px`;
-      }
-    });
-  },
-
-  updatePowerUps() {
-    this.powerUps.forEach((powerUp, index) => {
-      powerUp.update();
-      if (powerUp.y > this.container.offsetHeight) {
-        powerUp.element.remove();
-        this.powerUps.splice(index, 1);
-      } else {
-        powerUp.element.style.left = `${powerUp.x}px`;
-        powerUp.element.style.top = `${powerUp.y}px`;
       }
     });
   },
@@ -335,7 +317,6 @@ const game = {
     }
   },
 
-
   handleKeyDown(event) {
     console.log("Key pressed:", event.key);
     if (this.isRunning && !this.isPaused) {
@@ -353,6 +334,7 @@ const game = {
       this.togglePause();
     }
   },
+  
   handleKeyUp(event) {
     if (event.key === "ArrowLeft" || event.key === "a") {
       this.isLeftPressed = false;
@@ -378,9 +360,7 @@ const game = {
     this.enemies = [];
     this.projectiles = [];
     this.enemyProjectiles = [];
-    this.powerUps = [];
     this.entities = [];
-    this.comboSystem = new ComboSystem(this);
     this.startTime = performance.now();
   
     // Clear the game container
@@ -426,7 +406,6 @@ const game = {
   
     this.lastEnemySpawnTime = 0;
     this.lastBossSpawnTime = 0;
-    this.lastPowerUpSpawnTime = 0;
   
     this.isMindControlled = false;
     this.isEMPDissed = false;
@@ -452,7 +431,6 @@ const game = {
     }
   },
 
-
   pauseGame() {
     this.isPaused = true;
     this.menuManager.showMenu("pause");
@@ -465,7 +443,6 @@ const game = {
     console.log("Game resumed");
   },
 
-
   gameOver() {
     this.isRunning = false;
     this.addAnnouncement("Game Over", 5000);
@@ -474,7 +451,6 @@ const game = {
     this.enemies.forEach(enemy => enemy.element.remove());
     this.projectiles.forEach(proj => proj.element.remove());
     this.enemyProjectiles.forEach(proj => proj.element.remove());
-    this.powerUps.forEach(powerUp => powerUp.element.remove());
     this.entities.forEach(entity => {
       if (entity == this.player) entity.element.remove();
     });
@@ -482,7 +458,6 @@ const game = {
     this.enemies = [];
     this.projectiles = [];
     this.enemyProjectiles = [];
-    this.powerUps = [];
     this.entities = [this.player];
   
     this.menuManager.showMenu("gameOver");
@@ -500,7 +475,6 @@ const game = {
     this.checkProjectileEnemyCollisions();
     this.checkPlayerEnemyCollisions();
     this.checkEnemyProjectilePlayerCollisions();
-    this.checkPlayerPowerUpCollisions();
   },
 
   checkProjectileEnemyCollisions() {
@@ -529,12 +503,7 @@ const game = {
             }
             enemy.element.remove();
             this.enemies.splice(eIndex, 1);
-            this.score += (enemy.isBoss ? 100 : 10) * this.getScoreMultiplier();
-            this.comboSystem.incrementCombo();
-
-            if (Math.random() < 0.1) {
-              this.spawnPowerUp(enemy.x, enemy.y);
-            }
+            this.score += (enemy.isBoss ? 100 : 10);
           }
 
           if (proj.splash) {
@@ -565,8 +534,6 @@ const game = {
         const playerDead = this.player.takeDamage(enemy.damage);
         if (playerDead) {
           this.gameOver();
-        } else {
-          this.comboSystem.resetCombo();
         }
       }
     }
@@ -581,25 +548,10 @@ const game = {
         const playerDead = this.player.takeDamage(proj.damage);
         if (playerDead) {
           this.gameOver();
-        } else {
-          this.comboSystem.resetCombo();
-        }
+        } 
       }
     }
   },
-
-  checkPlayerPowerUpCollisions() {
-    for (let pIndex = this.powerUps.length - 1; pIndex >= 0; pIndex--) {
-      const powerUp = this.powerUps[pIndex];
-      if (this.isColliding(powerUp, this.player)) {
-        powerUp.element.remove();
-        this.powerUps.splice(pIndex, 1);
-        this.player.activatePowerUp(powerUp);
-        this.addAnnouncement(`${powerUp.type} activated!`);
-      }
-    }
-  },
-
 
   isColliding(rect1, rect2) {
     const rect1CenterX = rect1.x;
@@ -686,35 +638,6 @@ const game = {
     this.addAnnouncement(`${boss.name} has appeared!`, 5000);
   },
 
-  spawnPowerUp(x, y) {
-    const rand = Math.random();
-    let powerUp;
-    if (rand < 0.1) powerUp = new RapidFirePowerUp(x, y, this.player);
-    else if (rand < 0.2) powerUp = new SpreadShotPowerUp(x, y, this.player);
-    else if (rand < 0.3) powerUp = new ShieldBubblePowerUp(x, y, this.player);
-    else if (rand < 0.4) powerUp = new PiercingShotPowerUp(x, y, this.player);
-    else if (rand < 0.5) powerUp = new HealthPack(x, y, this.player);
-    else if (rand < 0.6) powerUp = new BombPowerUp(x, y, this);
-    else if (rand < 0.7) powerUp = new SidekickPowerUp(x, y, this.player, this);
-    else if (rand < 0.8) powerUp = new MagnetPowerUp(x, y, this.player);
-    else if (rand < 0.9) powerUp = new UltimateChargePowerUp(x, y, this.player);
-    else powerUp = new TimeWarpPowerUp(x, y, this);
-
-    this.powerUps.push(powerUp);
-    this.container.appendChild(powerUp.element);
-  },
-
-  spawnPowerUps() {
-    if (!this.lastPowerUpSpawnTime) this.lastPowerUpSpawnTime = 0;
-    if (
-      performance.now() - this.lastPowerUpSpawnTime >
-      20000 + Math.random() * 10000
-    ) {
-      this.spawnPowerUp(Math.random() * this.container.offsetWidth, -50);
-      this.lastPowerUpSpawnTime = performance.now();
-    }
-  },
-
   releaseEnergyWave() {
     for (let eIndex = this.enemies.length - 1; eIndex >= 0; eIndex--) {
       const enemy = this.enemies[eIndex];
@@ -733,7 +656,7 @@ const game = {
       if (!enemy.isBoss) {
         enemy.element.remove();
         this.enemies.splice(eIndex, 1);
-        this.score += 10 * this.getScoreMultiplier();
+        this.score += 10;
       }
     }
   },
@@ -753,9 +676,7 @@ const game = {
         const playerDead = this.player.takeDamage(30);
         if (playerDead) {
           this.gameOver();
-        } else {
-          this.comboSystem.resetCombo();
-        }
+        } 
       }
     };
 
@@ -862,20 +783,6 @@ const game = {
     return Math.hypot(obj1.x - obj2.x, obj1.y - obj2.y);
   },
 
-  getScoreMultiplier() {
-    switch (this.comboSystem.comboLevel) {
-      case 2:
-        return 1.5;
-      case 3:
-        return 2;
-      case 4:
-        return 3;
-      case 5:
-        return 4;
-      default:
-        return 1;
-    }
-  },
 };
 
 window.addEventListener("load", () => game.init());

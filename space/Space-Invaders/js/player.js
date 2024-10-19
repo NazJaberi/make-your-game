@@ -125,7 +125,7 @@ class BasePlayer {
             this.damage,
             angle,
             this.piercingShotActive,
-            this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
+            false // Remove combo-related splash damage
           );
           projectiles.push(proj);
         });
@@ -137,7 +137,7 @@ class BasePlayer {
           this.damage,
           0,
           this.piercingShotActive,
-          this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
+          false // Remove combo-related splash damage
         );
         projectiles.push(proj);
       }
@@ -318,7 +318,7 @@ class GlassCannon extends BasePlayer {
         this.powerSurgeActive ? this.damage * 2.5 : this.damage,
         0,
         this.piercingShotActive,
-        this.game.comboSystem.comboLevel >= 5 // Splash damage at combo level 5
+        false // Remove combo-related splash damage
       );
       return [projectile];
     }
@@ -344,61 +344,5 @@ class AllRounder extends BasePlayer {
     console.log("Energy Wave released!");
     this.game.releaseEnergyWave();
     return 1000; // Duration of energy wave effect
-  }
-}
-
-class Sidekick extends BasePlayer {
-  constructor(x, y, player, game) {
-    super(x, y, {
-      speed: player.speed,
-      fireRate: player.fireRate,
-      damage: player.damage / 2,
-      health: player.maxHealth / 2,
-      defense: player.defense,
-      specialAbility: null,
-      specialAbilityCooldown: 0,
-    });
-    this.color = "lightgray";
-    this.player = player;
-    this.game = game; // Set the game property
-    this.width = 30;
-    this.height = 30;
-    this.offsetX = 70;
-    this.offsetY = -30;
-    this.angle = 0;
-
-    this.element.style.width = `${this.width}px`;
-    this.element.style.height = `${this.height}px`;
-  }
-
-  update(currentTime) {
-    // Circular motion around the offset point
-    this.angle += 0.05; // Adjust this value to change rotation speed
-    const circleRadius = 10; // Adjust this value to change the circle size
-
-    this.x = this.player.x + this.offsetX + Math.cos(this.angle) * circleRadius;
-    this.y = this.player.y + this.offsetY + Math.sin(this.angle) * circleRadius;
-
-    // Ensure the sidekick stays within the game boundaries
-    const maxX = this.game.container.offsetWidth - this.width / 2;
-    const minX = this.width / 2;
-    const maxY = this.game.container.offsetHeight - this.height / 2;
-    const minY = this.height / 2;
-    this.x = Math.max(minX, Math.min(this.x, maxX));
-    this.y = Math.max(minY, Math.min(this.y, maxY));
-
-    this.render();
-  }
-
-  shoot(currentTime) {
-    // Shooting is handled in the player's shoot method
-    return null;
-  }
-
-  render() {
-    super.render();
-    if (this.game && this.game.assets && this.game.assets.sidekick) {
-      this.element.style.backgroundImage = `url(${this.game.assets.sidekick.src})`;
-    }
   }
 }
