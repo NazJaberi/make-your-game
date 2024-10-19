@@ -72,23 +72,21 @@ class BaseEnemy {
   shoot(currentTime) {
     if (currentTime - this.lastShotTime >= 1000 / this.fireRate) {
       this.lastShotTime = currentTime;
-      const projectileWidth = 5; // Assuming projectile width is 5px
-
-      // Calculate spawn position at the right edge
-      const spawnX = this.x + (this.width / 2) + (projectileWidth / 2);
-      const spawnY = this.y + this.height / 2; // Bottom of the enemy
-
-      // Create projectile with angle = Math.PI / 2 (straight down)
+      const projectileWidth = 5;   
+      const projectileHeight = 15; 
+  
+      const spawnX = this.x;
+      const spawnY = this.y + (this.height / 2) + (projectileHeight / 2);
+  
       const proj = new EnemyProjectile(
         spawnX,
         spawnY,
         this.damage,
-        5,
+        5,             
         this.game,
-        Math.PI / 2
+        Math.PI / 2    
       );
-
-      // Add to game
+  
       this.game.enemyProjectiles.push(proj);
       this.game.container.appendChild(proj.element);
     }
