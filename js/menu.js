@@ -119,7 +119,7 @@ class MenuManager {
 
     menuContent.appendChild(title);
     menuContent.appendChild(startButton);
-    menuContent.appendChild(highScoreButton);
+    // menuContent.appendChild(highScoreButton);
 
     this.menuContainer.appendChild(menuContent);
   }

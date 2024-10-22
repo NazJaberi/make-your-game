@@ -4,25 +4,25 @@ const game = {
       name: "Speedster",
       class: Speedster,
       color: "yellow",
-      stats: { speed: 15, fireRate: 2, damage: 3, health: 60, defense: 5 },
+      stats: { speed: 15, fireRate: 5, damage: 18, health: 80, defense: 5 },
     },
     {
       name: "Tank",
       class: Tank,
       color: "blue",
-      stats: { speed: 25, fireRate: 10, damage: 70, health: 350, defense: 125 },
+      stats: { speed: 6, fireRate: 2, damage: 13, health: 300, defense: 30 },
     },
     {
       name: "Glass Cannon",
       class: GlassCannon,
       color: "red",
-      stats: { speed: 10, fireRate: 3, damage: 7, health: 50, defense: 0 },
+      stats: { speed: 9, fireRate: 7, damage: 35, health: 60, defense: 0 },
     },
     {
       name: "All Rounder",
       class: AllRounder,
       color: "purple",
-      stats: { speed: 10, fireRate: 2, damage: 5, health: 100, defense: 10 },
+      stats: { speed: 10, fireRate: 4, damage: 22, health: 120, defense: 15 },
     },
   ],
   selectedPlayerIndex: 0,
@@ -31,6 +31,7 @@ const game = {
 
   backgroundMusic: null,
   isMusicPlaying: false,
+  animationFrameId: null,
 
   init() {
     this.container = document.getElementById("game-container");
@@ -92,17 +93,23 @@ const game = {
   },
 
   toggleMusic() {
-    if (this.isMusicPlaying) {
-      this.backgroundMusic.pause();
-      this.isMusicPlaying = false;
+    if (this.backgroundMusic) {
+      if (this.isMusicPlaying) {
+        this.backgroundMusic.pause();
+        this.isMusicPlaying = false;
+      } else {
+        this.backgroundMusic.play().catch(error => {
+          console.warn("Unable to play background music:", error);
+        });
+        this.isMusicPlaying = true;
+      }
+      
+      const musicToggle = document.getElementById('music-toggle');
+      if (musicToggle) {
+        musicToggle.textContent = this.isMusicPlaying ? 'Pause Music' : 'Play Music';
+      }
     } else {
-      this.backgroundMusic.play();
-      this.isMusicPlaying = true;
-    }
-    
-    const musicToggle = document.getElementById('music-toggle');
-    if (musicToggle) {
-      musicToggle.textContent = this.isMusicPlaying ? 'Pause Music' : 'Play Music';
+      console.warn("Background music element not found");
     }
   },
   
@@ -135,7 +142,7 @@ const game = {
       tank: "assets/images/tank.png",
       glasscannon: "assets/images/glasscannon.png",
       allrounder: "assets/images/allrounder.png",
-      sidekick: "assets/images/sidekick.png",
+      // sidekick: "assets/images/sidekick.png",
       basicDrone: "assets/images/Basic_Drone.png",
       speedyZapper: "assets/images/zapper.png",
       armoredSaucer: "assets/images/saucer.png",
@@ -182,7 +189,7 @@ const game = {
     }
     
     this.lastUpdateTime = currentTime;
-    requestAnimationFrame(this.gameLoop.bind(this));
+    this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
   },
 
   update(currentTime, deltaTime) {
@@ -355,9 +362,6 @@ const game = {
     this.entities = [];
     this.startTime = performance.now();
 
-    const gameMusic = document.getElementById('background-music');
-    gameMusic.play();
-  
     // Clear the game container
     while (this.container.firstChild) {
       this.container.removeChild(this.container.firstChild);
@@ -376,21 +380,28 @@ const game = {
     // Add music controls after HUD is created
     this.addMusicControls();
   
-    if (!this.isMusicPlaying) {
-      this.toggleMusic(); // Start playing music when the game starts
+    if (!this.isMusicPlaying && this.backgroundMusic) {
+      this.backgroundMusic.play().catch(error => {
+        console.warn("Unable to play background music:", error);
+      });
+      this.isMusicPlaying = true;
     }
   
     // Apply background
-    this.container.style.backgroundImage = `url(${this.assets.background.src})`;
-    this.container.style.backgroundSize = 'cover';
-    this.container.style.backgroundPosition = 'center';
-    this.container.style.backgroundRepeat = 'no-repeat';
+    if (this.assets.background) {
+      this.container.style.backgroundImage = `url(${this.assets.background.src})`;
+      this.container.style.backgroundSize = 'cover';
+      this.container.style.backgroundPosition = 'center';
+      this.container.style.backgroundRepeat = 'no-repeat';
+    } else {
+      console.warn("Background asset not found");
+    }
   
     // Create player
     const PlayerClass = this.playerTypes[this.selectedPlayerIndex].class;
     this.player = new PlayerClass(
       this.container.offsetWidth / 2,
-      this.container.offsetHeight - 50  // Adjusted to position player closer to bottom
+      this.container.offsetHeight - 50
     );
     this.player.game = this;
     this.entities.push(this.player);
@@ -410,6 +421,7 @@ const game = {
     this.updateHUD();
   
     // Start the game loop
+    this.lastUpdateTime = null;
     this.gameLoop(performance.now());
   },
 
@@ -453,10 +465,15 @@ const game = {
     this.menuManager.showMenu("main");
     console.log("Returned to main menu");
   },
+
   resetGame() {
     // Stop the game loop
     this.isRunning = false;
     this.isPaused = false;
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
 
     // Clear all game objects
     this.enemies.forEach(enemy => enemy.element.remove());
@@ -477,25 +494,31 @@ const game = {
       this.container.removeChild(this.container.firstChild);
     }
   
-      // Reset the container background
-      this.container.style.backgroundImage = '';
+    // Reset the container background
+    this.container.style.backgroundImage = '';
 
-      // Stop game music and start menu music
-      const gameMusic = document.getElementById('background-music');
-      gameMusic.pause();
-      gameMusic.currentTime = 0;
-  
-      // Reset other game states
-      this.isMindControlled = false;
-      this.isEMPDissed = false;
-      this.timeWarpActive = false;
-  
-      // Reset spawn timers
-      this.lastEnemySpawnTime = 0;
-      this.lastBossSpawnTime = 0;
-  
-      console.log("Game reset");
-    },
+    // Stop game music
+    if (this.backgroundMusic) {
+      this.backgroundMusic.pause();
+      this.backgroundMusic.currentTime = 0;
+    }
+    this.isMusicPlaying = false;
+
+    // Reset other game states
+    this.isMindControlled = false;
+    this.isEMPDissed = false;
+    this.timeWarpActive = false;
+
+    // Reset spawn timers
+    this.lastEnemySpawnTime = 0;
+    this.lastBossSpawnTime = 0;
+
+    // Reset timing variables
+    this.lastUpdateTime = null;
+    this.startTime = 0;
+
+    console.log("Game reset");
+  },
 
   checkCollisions() {
     this.checkProjectileEnemyCollisions();

@@ -29,7 +29,7 @@ class BasePlayer {
     this.shieldCharges = 0;
     this.spreadShotActive = false;
     this.piercingShotActive = false;
-    this.sidekick = null;
+    // this.sidekick = null;
 
     // Create DOM element
     this.element = document.createElement("div");
@@ -211,7 +211,7 @@ class BasePlayer {
 class Speedster extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 12,
+      speed: 15,
       fireRate: 5,
       damage: 18,
       health: 80,
@@ -244,9 +244,9 @@ class Tank extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
       speed: 6,
-      fireRate: 1,
-      damage: 15,
-      health: 200,
+      fireRate: 2,
+      damage: 13,
+      health: 300,
       defense: 30,
       specialAbility: () => this.fortify(),
       specialAbilityCooldown: 15,
@@ -285,9 +285,9 @@ class Tank extends BasePlayer {
 class GlassCannon extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
-      speed: 8,
-      fireRate: 6,
-      damage: 30,
+      speed: 9,
+      fireRate: 7,
+      damage: 35,
       health: 60,
       defense: 0,
       specialAbility: () => this.powerSurge(),
@@ -329,8 +329,8 @@ class AllRounder extends BasePlayer {
   constructor(x, y) {
     super(x, y, {
       speed: 9,
-      fireRate: 3,
-      damage: 20,
+      fireRate: 4,
+      damage: 22,
       health: 120,
       defense: 15,
       specialAbility: () => this.energyWave(),
